@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Pos?>
+
+<?import java.net.URL?>
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.rentpal.controllers.dashboard.DashboardHomeController"
+            prefWidth="1000" prefHeight="700"
+            styleClass="content-area">
+
+    <stylesheets>
+        <URL value="@/css/theme.css" />
+        <URL value="@/css/dashboard.css" />
+        <URL value="@/css/tables.css" />
+    </stylesheets>
+
+    <!-- 🟦 MAIN CONTENT AREA -->
+    <center>
+        <VBox spacing="25" alignment="TOP_CENTER">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+
+
+            <!-- ==== STAT CARDS ==== -->
+            <HBox spacing="25" alignment="CENTER" styleClass="stats-row">
+                <VBox styleClass="stat-card">
+                    <Label text="👥 Total Tenants" styleClass="stat-title"/>
+                    <Label fx:id="totalTenants" text="120" styleClass="stat-value"/>
+                </VBox>
+
+                <VBox styleClass="stat-card">
+                    <Label text="💰 Pending Payments" styleClass="stat-title"/>
+                    <Label fx:id="pendingPayments" text="15" styleClass="stat-value"/>
+                </VBox>
+
+                <VBox styleClass="stat-card">
+                    <Label text="📩 Active Complaints" styleClass="stat-title"/>
+                    <Label fx:id="activeComplaints" text="8" styleClass="stat-value"/>
+                </VBox>
+
+                <VBox styleClass="stat-card">
+                    <Label text="🏠 Vacant Units" styleClass="stat-title"/>
+                    <Label fx:id="vacantUnits" text="5" styleClass="stat-value"/>
+                </VBox>
+            </HBox>
+
+            <!-- ==== MAIN DASHBOARD ROW ==== -->
+            <HBox spacing="25" alignment="TOP_CENTER" VBox.vgrow="ALWAYS">
+
+                <!-- 🟦 PAYMENT CHART SECTION -->
+                <VBox spacing="10" alignment="CENTER" styleClass="chart-card">
+                    <Label text="📊 Payment Trends" styleClass="chart-title"/>
+                    <BarChart fx:id="paymentChart" title="Payment Trends"
+                              prefWidth="600" prefHeight="380">
+                        <xAxis>
+                            <CategoryAxis label="Month"/>
+                        </xAxis>
+                        <yAxis>
+                            <NumberAxis label="Amount Collected ($)" autoRanging="true"/>
+                        </yAxis>
+                    </BarChart>
+                </VBox>
+
+                <!-- 🟨 RECENT ACTIVITY CARD -->
+                <VBox spacing="10" styleClass="activity-card" alignment="TOP_CENTER" prefWidth="300">
+                    <Label text="🗒️ Recent Activity" styleClass="chart-title"/>
+                    <TableView fx:id="recentActivityTable" prefHeight="380" prefWidth="280">
+                        <columns>
+                            <TableColumn fx:id="colActivity" text="Activity" prefWidth="260"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+
+            </HBox>
+
+        </VBox>
+    </center>
+</BorderPane>

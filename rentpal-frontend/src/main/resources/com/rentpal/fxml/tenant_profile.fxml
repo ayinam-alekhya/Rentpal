@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.rentpal.controllers.dashboard.TenantProfileController"
+            fx:id="rootPane"
+            prefWidth="1000" prefHeight="700"
+            styleClass="content-area">
+
+    <children>
+        <AnchorPane fx:id="cardPane" layoutX="40" layoutY="30" prefWidth="920" prefHeight="640"
+                    styleClass="card" AnchorPane.leftAnchor="40" AnchorPane.rightAnchor="40"
+                    AnchorPane.topAnchor="30" AnchorPane.bottomAnchor="30">
+
+            <children>
+                <Label text="Tenant Profile" layoutX="28" layoutY="18" styleClass="page-title"/>
+
+                <!-- Left: profile picture + change -->
+                <VBox layoutX="40" layoutY="70" spacing="8" prefWidth="220">
+                    <children>
+                        <StackPane prefWidth="220" prefHeight="160">
+                            <children>
+                                <Circle fx:id="profilePic" radius="64"
+                                        style="-fx-fill: linear-gradient(to bottom, #E0E6F7, #C7D2F9); -fx-stroke: #CBD5E1; -fx-stroke-width: 2;"/>
+                            </children>
+                        </StackPane>
+
+                        <Button fx:id="changePhotoBtn" text="Change Photo" onAction="#handleChangePhoto" styleClass="logout-btn" prefWidth="140"/>
+                    </children>
+                </VBox>
+
+                <!-- Right: form fields -->
+                <GridPane layoutX="300" layoutY="70" hgap="14" vgap="14">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="140"/>
+                        <ColumnConstraints minWidth="420"/>
+                    </columnConstraints>
+
+                    <children>
+                        <Label text="Full Name:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <TextField fx:id="nameField" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="text-field"/>
+
+                        <Label text="Email:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="emailField" GridPane.rowIndex="1" GridPane.columnIndex="1" styleClass="text-field"/>
+
+                        <Label text="Phone:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <TextField fx:id="phoneField" GridPane.rowIndex="2" GridPane.columnIndex="1" styleClass="text-field"/>
+
+                        <Label text="Apartment:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <TextField fx:id="apartmentField" GridPane.rowIndex="3" GridPane.columnIndex="1" styleClass="text-field"/>
+
+                        <Label text="Tenant Status:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="statusCombo" GridPane.rowIndex="4" GridPane.columnIndex="1" prefWidth="200" styleClass="text-field"/>
+                    </children>
+                </GridPane>
+
+                <!-- Recent payments (small table) -->
+                <Label text="Recent Payments" layoutX="300" layoutY="330" style="-fx-text-fill:#1E3A8A; -fx-font-weight:bold;"/>
+                <TableView fx:id="paymentsTable" layoutX="300" layoutY="360" prefWidth="520" prefHeight="160" styleClass="card">
+                    <columns>
+                        <TableColumn text="Date" prefWidth="160"/>
+                        <TableColumn text="Amount" prefWidth="140"/>
+                        <TableColumn text="Status" prefWidth="160"/>
+                    </columns>
+                </TableView>
+
+                <!-- Action buttons -->
+                <HBox layoutX="40" layoutY="540" spacing="12">
+                    <children>
+                        <Button text="Edit" onAction="#handleEdit" styleClass="add-btn" prefWidth="110"/>
+                        <Button fx:id="saveBtn" text="Save" onAction="#handleSave" styleClass="add-btn" prefWidth="110"/>
+                        <Button text="View Full Payment History" onAction="#handleViewPayments" styleClass="add-btn"/>
+                    </children>
+                </HBox>
+
+            </children>
+        </AnchorPane>
+    </children>
+</AnchorPane>

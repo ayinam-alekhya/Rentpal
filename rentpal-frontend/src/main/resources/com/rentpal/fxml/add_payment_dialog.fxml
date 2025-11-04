@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<?import java.net.URL?>
+<DialogPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.rentpal.controllers.payments.AddPaymentController"
+            prefWidth="450" prefHeight="450"
+            styleClass="add-payment-dialog">
+
+    <stylesheets>
+        <URL value="@/css/dialog.css" />
+    </stylesheets>
+
+
+    <content>
+        <VBox spacing="15" alignment="CENTER">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <Label text="➕ Add New Payment" styleClass="dialog-title"/>
+
+            <GridPane hgap="10" vgap="12">
+                <columnConstraints>
+                    <ColumnConstraints halignment="RIGHT" prefWidth="120"/>
+                    <ColumnConstraints halignment="LEFT" prefWidth="250"/>
+                </columnConstraints>
+
+                <!-- Tenant Field (visible for tenants) -->
+                <Label text="Tenant:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <TextField fx:id="tenantField" promptText="Tenant Name" editable="false"
+                           GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <!-- Tenant Selection (visible for owners) -->
+                <Label fx:id="tenantSelectionLabel" text="Select Tenant:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <ComboBox fx:id="tenantComboBox" promptText="Select tenant"
+                          GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="Amount ($):" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <TextField fx:id="amountField" promptText="e.g. 1200"
+                           GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                <Label text="Date:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <DatePicker fx:id="datePicker" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                <Label text="Method:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                <ComboBox fx:id="methodComboBox" promptText="Select method"
+                          GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                <Label text="Status:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                <ComboBox fx:id="statusComboBox" promptText="Select status"
+                          GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+            </GridPane>
+
+            <HBox spacing="20" alignment="CENTER">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+
+                <Button fx:id="cancelButton" text="Cancel"
+                        onAction="#handleCancel" styleClass="cancel-btn"/>
+                <Button fx:id="saveButton" text="Save Payment"
+                        onAction="#handleSave" styleClass="save-btn"/>
+            </HBox>
+        </VBox>
+
+    </content>
+
+</DialogPane>

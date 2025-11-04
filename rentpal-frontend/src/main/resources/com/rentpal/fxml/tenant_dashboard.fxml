@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<?import java.net.URL?>
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.rentpal.controllers.tenantdashboard.TenantDashboardController"
+            prefWidth="1200" prefHeight="720"
+            styleClass="main-bg">
+
+    <stylesheets>
+        <URL value="@/css/theme.css"/>
+        <URL value="@/css/dashboard.css"/>
+        <URL value="@/css/tables.css"/>
+        <URL value="@/css/sidebar_topbar.css"/>
+    </stylesheets>
+
+    <!-- SIDEBAR -->
+    <left>
+        <VBox fx:id="sidebar" spacing="25" prefWidth="220" styleClass="sidebar">
+            <padding>
+                <Insets top="30" right="20" bottom="30" left="20"/>
+            </padding>
+
+            <Label text="RentPal" styleClass="sidebar-logo "/>
+            <Separator/>
+
+            <Button text="Home" styleClass="sidebar-btn" onAction="#showHome"/>
+            <Button text="My Payments" styleClass="sidebar-btn" onAction="#showPayments"/>
+            <Button text="My Complaints" styleClass="sidebar-btn" onAction="#showComplaints"/>
+            <Button text="Profile" styleClass="sidebar-btn" onAction="#showProfile"/>
+
+            <Pane VBox.vgrow="ALWAYS"/>
+            <Button text="☰" styleClass="collapse-btn" onAction="#toggleSidebar"/>
+            <Separator/>
+            <Button text="Home" styleClass="logout-btn" onAction="#handleHome"/>
+            <Button fx:id="logout" text="Logout" styleClass="logout-btn" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+
+    <!-- MAIN CONTENT -->
+    <center>
+        <StackPane fx:id="contentArea" styleClass="content-area"/>
+    </center>
+</BorderPane>

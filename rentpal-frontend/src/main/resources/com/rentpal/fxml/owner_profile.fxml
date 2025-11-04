@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.rentpal.controllers.dashboard.OwnerProfileController"
+            fx:id="rootPane"
+            prefWidth="1000" prefHeight="700"
+            styleClass="content-area">
+
+    <!-- Card -->
+    <children>
+        <AnchorPane fx:id="cardPane" layoutX="40" layoutY="30" prefWidth="920" prefHeight="640"
+                    styleClass="card" AnchorPane.leftAnchor="40" AnchorPane.rightAnchor="40"
+                    AnchorPane.topAnchor="30" AnchorPane.bottomAnchor="30">
+
+            <children>
+                <Label text="Owner Profile" layoutX="28" layoutY="18" styleClass="page-title"/>
+
+                <!-- Left: profile picture + change -->
+                <VBox layoutX="40" layoutY="70" spacing="8" prefWidth="220">
+                    <children>
+                        <StackPane prefWidth="220" prefHeight="160">
+                            <children>
+                                <Circle fx:id="profilePic" radius="64"
+                                        style="-fx-fill: linear-gradient(to bottom, #E0E6F7, #C7D2F9); -fx-stroke: #CBD5E1; -fx-stroke-width: 2;"/>
+                            </children>
+                        </StackPane>
+
+                        <Button fx:id="changePhotoBtn" text="Change Photo" onAction="#handleChangePhoto" styleClass="logout-btn" prefWidth="140"/>
+                    </children>
+                </VBox>
+
+                <!-- Right: form fields -->
+                <GridPane layoutX="300" layoutY="70" hgap="14" vgap="14">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="140"/>
+                        <ColumnConstraints minWidth="420"/>
+                    </columnConstraints>
+
+                    <!-- Fields -->
+                    <children>
+                        <Label text="Full Name:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <TextField fx:id="nameField" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="text-field"/>
+
+                        <Label text="Email:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="emailField" GridPane.rowIndex="1" GridPane.columnIndex="1" styleClass="text-field"/>
+
+                        <Label text="Phone:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <TextField fx:id="phoneField" GridPane.rowIndex="2" GridPane.columnIndex="1" styleClass="text-field"/>
+
+                        <Label text="Properties Owned:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <TextField fx:id="propertyCountField" GridPane.rowIndex="3" GridPane.columnIndex="1" editable="false" styleClass="text-field"/>
+
+                        <Label text="Join Date:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <TextField fx:id="joinDateField" GridPane.rowIndex="4" GridPane.columnIndex="1" editable="false" styleClass="text-field"/>
+                    </children>
+                </GridPane>
+
+                <!-- Action buttons -->
+                <HBox layoutX="300" layoutY="360" spacing="12">
+                    <children>
+                        <Button text="Edit" onAction="#handleEdit" styleClass="add-btn" prefWidth="120"/>
+                        <Button fx:id="saveBtn" text="Save" onAction="#handleSave" styleClass="add-btn" prefWidth="120"/>
+                    </children>
+                </HBox>
+
+                <!-- Bottom quick links -->
+                <HBox layoutX="40" layoutY="520" spacing="12">
+                    <children>
+                        <Button text="View My Properties" onAction="#handleViewProperties" styleClass="add-btn"/>
+                        <Button text="View Complaints" onAction="#handleViewComplaints" styleClass="add-btn"/>
+                    </children>
+                </HBox>
+
+            </children>
+        </AnchorPane>
+    </children>
+</AnchorPane>

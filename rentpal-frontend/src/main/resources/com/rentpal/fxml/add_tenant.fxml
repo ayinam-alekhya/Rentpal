@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.collections.FXCollections?>
+<?import java.net.URL?>
+
+<?import java.lang.String?>
+<StackPane xmlns="http://javafx.com/javafx/21"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.rentpal.controllers.tenants.AddTenantController"
+           prefWidth="500" prefHeight="500">
+
+    <stylesheets>
+        <URL value="@/css/theme.css" />
+        <URL value="@/css/dashboard.css" />
+    </stylesheets>
+
+    <AnchorPane style="-fx-background-color: linear-gradient(to bottom right, #E8EEF9, #DDE6F5, #C7D2F9);
+                      -fx-border-radius: 16; -fx-background-radius: 16;"
+                prefWidth="480" prefHeight="480">
+
+        <VBox alignment="CENTER" spacing="20" style="-fx-padding: 30;"
+              AnchorPane.leftAnchor="30" AnchorPane.rightAnchor="30"
+              AnchorPane.topAnchor="30" AnchorPane.bottomAnchor="30">
+
+            <Label text="Add New Tenant"
+                   style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1E3A8A;
+                          -fx-padding: 0 0 10 0;"/>
+
+            <VBox spacing="15" style="-fx-padding: 10 0 10 0;">
+                <TextField fx:id="tenantNameField" promptText="Full Name" styleClass="text-field"/>
+                <TextField fx:id="tenantEmailField" promptText="Email Address" styleClass="text-field"/>
+                <TextField fx:id="tenantContactField" promptText="Contact Number" styleClass="text-field"/>
+                <TextField fx:id="tenantUnitField" promptText="Unit/Flat Number" styleClass="text-field"/>
+                <TextField fx:id="tenantRentField" promptText="Monthly Rent" styleClass="text-field"/>
+
+                <ComboBox fx:id="statusComboBox" promptText="Select Status" styleClass="combo-box">
+                    <items>
+                        <FXCollections fx:factory="observableArrayList">
+                            <String fx:value="Active"/>
+                            <String fx:value="Inactive"/>
+                        </FXCollections>
+                    </items>
+                </ComboBox>
+            </VBox>
+
+            <HBox spacing="20" alignment="CENTER" style="-fx-padding: 10 0 0 0;">
+                <Button text="Cancel" onAction="#handleCancel" styleClass="cancel-btn" prefWidth="120" prefHeight="40"/>
+                <Button text="Add Tenant" onAction="#handleAddTenant" styleClass="add-btn" prefWidth="120" prefHeight="40"/>
+            </HBox>
+        </VBox>
+    </AnchorPane>
+</StackPane>

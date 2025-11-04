@@ -1,0 +1,41 @@
+/* ==== TABLES ==== */
+.table-view {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0.2, 0, 3);
+}
+
+.table-view .column-header-background {
+    -fx-background-color: linear-gradient(to bottom, #EFF6FF, #DBEAFE);
+    -fx-border-color: #BFDBFE;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-view .column-header .label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1E3A8A;
+}
+
+.table-row-cell:filled:selected {
+    -fx-background-color: linear-gradient(to right, #DBEAFE, #BFDBFE);
+}
+.table-row-cell:hover {
+    -fx-background-color: #F1F5F9;
+}
+
+/* ==== CHARTS ==== */
+.chart-plot-background {
+    -fx-background-color: linear-gradient(to bottom right, #EFF6FF, #DBEAFE);
+    -fx-background-radius: 12;
+}
+.chart-legend {
+    -fx-text-fill: #1E3A8A;
+}
+.chart-series-line {
+    -fx-stroke: #2563EB;
+    -fx-stroke-width: 2px;
+}
+.chart-symbol {
+    -fx-background-color: #2563EB, white;
+}

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.rentpal.controllers.tenantdashboard.TenantHomeController"
+      spacing="25" alignment="TOP_CENTER">
+      
+    <padding>
+        <Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+
+    <Label text="Welcome, Tenant!"/>
+
+    <HBox spacing="30" alignment="CENTER">
+        <VBox>
+            <Label text="Total Rent Paid"/>
+            <Label fx:id="totalRentPaid" text="\$0.00"/>
+        </VBox>
+
+        <VBox>
+            <Label text="Pending Dues"/>
+            <Label fx:id="pendingDues" text="\$0.00"/>
+        </VBox>
+
+        <VBox>
+            <Label text="Complaints Raised"/>
+            <Label fx:id="complaintsRaised" text="0"/>
+        </VBox>
+    </HBox>
+
+    <Label text="Recent Payments"/>
+    <TableView fx:id="recentPaymentsTable" prefHeight="200">
+        <columns>
+            <TableColumn fx:id="dateColumn" text="Date" prefWidth="200"/>
+            <TableColumn fx:id="descriptionColumn" text="Description" prefWidth="600"/>
+            <TableColumn fx:id="statusColumn" text="Status" prefWidth="150"/>
+        </columns>
+    </TableView>
+    
+    <Label text="Recent Complaints"/>
+    <TableView fx:id="recentComplaintsTable" prefHeight="200">
+        <columns>
+            <TableColumn fx:id="complaintDateColumn" text="ID" prefWidth="100"/>
+            <TableColumn fx:id="complaintDescriptionColumn" text="Description" prefWidth="700"/>
+            <TableColumn fx:id="complaintStatusColumn" text="Status" prefWidth="150"/>
+        </columns>
+    </TableView>
+</VBox>

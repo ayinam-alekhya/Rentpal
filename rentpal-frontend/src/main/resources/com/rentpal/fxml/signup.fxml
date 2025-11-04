@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+
+<?import javafx.scene.layout.StackPane?>
+<?import java.net.URL?>
+<StackPane xmlns="http://javafx.com/javafx/21"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.rentpal.controllers.auth.SignupController"
+           prefWidth="800" prefHeight="600">
+
+    <stylesheets>
+        <URL value="@/css/login.css" />
+    </stylesheets>
+
+
+    <!-- Gradient background applies to entire StackPane -->
+
+    <VBox fx:id="signupBox"
+          alignment="CENTER"
+          spacing="20"
+          maxWidth="420"
+          maxHeight="520">
+        <Label text="Create Account" styleClass="label-title"/>
+
+        <ComboBox fx:id="roleComboBox" promptText="Select Role" prefWidth="220"/>
+        <TextField fx:id="nameField" promptText="Full Name"/>
+        <TextField fx:id="emailField" promptText="Email Address"/>
+        <PasswordField fx:id="passwordField" promptText="Password"/>
+        <PasswordField fx:id="confirmPasswordField" promptText="Confirm Password"/>
+
+        <Button text="Sign Up" onAction="#handleSignup"/>
+        <Hyperlink text="Back to Login" onAction="#handleBackToLogin"/>
+
+        <Hyperlink text="Back to Home" onAction="#handleBackToHome"
+                   style="-fx-text-fill: #3A86FF;"/>
+
+    </VBox>
+
+</StackPane>

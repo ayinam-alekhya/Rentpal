@@ -1,0 +1,204 @@
+/* ---------- Page Background ---------- */
+.root {
+    -fx-background-color: linear-gradient(to bottom right,
+    #e3f2fd 0%,
+    #d0e7ff 50%,
+    #b3d5ff 100%);
+
+    /* Add a subtle radial glow effect */
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+
+
+/* ---------- Floating Login Box ---------- */
+#loginBox {
+    -fx-alignment: center;
+    -fx-padding: 50 60 50 60;                 /* Inner spacing: top, right, bottom, left */
+    -fx-background-color: rgba(255, 255, 255, 0.95);
+    -fx-background-radius: 20;
+    -fx-border-color: rgba(0,0,0,0.15);
+    -fx-border-radius: 20;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 25, 0, 0, 10);
+
+    /* 🔑 Adjust box size here */
+    -fx-pref-width: 420px;                   /* Increase width */
+    -fx-pref-height: 480px;                  /* Increase height */
+    -fx-max-width: 420px;                     /* Prevents it from going too wide */
+    -fx-max-height: 480px;
+
+    -fx-spacing: 25;                          /* Space between elements inside the box */
+}
+
+/* ---------- Floating Signup Box ---------- */
+#signupBox {
+    -fx-pref-width: 420px;
+    -fx-pref-height: 520px;
+    -fx-max-width: 420px;
+    -fx-max-height: 520px;
+
+    -fx-alignment: center;
+    -fx-spacing: 25;
+    -fx-padding: 50 60 50 60;
+
+    -fx-background-color: rgba(255,255,255,0.95);
+    -fx-background-radius: 20;
+    -fx-border-color: rgba(0,0,0,0.1);
+    -fx-border-radius: 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 25, 0, 0, 10);
+}
+
+/* ---------- Floating Forgot Password Box ---------- */
+#forgotPasswordBox {
+    -fx-alignment: center;
+    -fx-padding: 50 60 50 60;
+    -fx-background-color: rgba(255, 255, 255, 0.95);
+    -fx-background-radius: 20;
+    -fx-border-color: rgba(0,0,0,0.15);
+    -fx-border-radius: 20;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 25, 0, 0, 10);
+
+    -fx-pref-width: 420px;
+    -fx-pref-height: 400px;
+    -fx-max-width: 420px;
+    -fx-max-height: 400px;
+
+    -fx-spacing: 25;
+}
+
+
+/* ---------- Title ---------- */
+.label-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #263238;
+    -fx-padding: 0 0 15 0;
+}
+
+/* ---------- Subtitle ---------- */
+.label-subtitle {
+    -fx-font-size: 16px;
+    -fx-text-fill: #546e7a;
+    -fx-padding: 0 0 10 0;
+}
+
+/* ---------- Footer Text ---------- */
+.label-footer {
+    -fx-font-size: 12px;
+    -fx-text-fill: #90a4ae;
+    -fx-padding: 15 0 0 0;
+}
+
+/* ---------- Input Fields ---------- */
+.text-field, .password-field, .input-field {
+    -fx-pref-width: 100%;
+    -fx-max-width: 320px;
+    -fx-pref-height: 48px;
+    -fx-background-radius: 10;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #b0bec5;
+    -fx-border-radius: 10;
+    -fx-padding: 0 12 0 12;
+    -fx-font-size: 15px;
+}
+.text-field:focused, .password-field:focused, .input-field:focused {
+    -fx-border-color: #42a5f5;
+    -fx-border-width: 2px;
+}
+
+/* ---------- Primary Buttons ---------- */
+.button, .action-btn {
+    -fx-max-width: 320px;
+    -fx-pref-height: 48px;
+    -fx-background-color: linear-gradient(to right, #42a5f5, #1e88e5);
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+}
+.button:hover, .action-btn:hover {
+    -fx-background-color: linear-gradient(to right, #1e88e5, #1565c0);
+    -fx-scale-x: 1.03;
+    -fx-scale-y: 1.03;
+    -fx-cursor: hand;
+}
+
+/* ---------- Secondary/Cancel Buttons ---------- */
+.cancel-btn {
+    -fx-background-color: transparent;
+    -fx-border-color: #b0bec5;
+    -fx-border-width: 2px;
+    -fx-border-radius: 10;
+    -fx-text-fill: #546e7a;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+}
+.cancel-btn:hover {
+    -fx-background-color: rgba(176, 190, 197, 0.1);
+    -fx-border-color: #90a4ae;
+    -fx-text-fill: #37474f;
+    -fx-scale-x: 1.03;
+    -fx-scale-y: 1.03;
+}
+
+/* ---------- Hyperlinks ---------- */
+.hyperlink {
+    -fx-text-fill: #1565c0;
+    -fx-border-color: transparent;
+    -fx-font-size: 14px;
+}
+.hyperlink:hover {
+    -fx-text-fill: #0d47a1;
+    -fx-underline: true;
+}
+
+/* Logo image at the top */
+.image-view {
+    -fx-padding: 0 0 15 0;
+}
+
+/* ==== ROLE SELECTION DROPDOWN ==== */
+#roleComboBox {
+    -fx-background-color: #F1F5F9;
+    -fx-border-color: #CBD5E1;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-font-size: 14px;
+    -fx-padding: 6 10;
+    -fx-prompt-text-fill: #64748B;  /* gray placeholder text */
+    -fx-text-fill: #1E3A8A;         /* blue text color */
+    -fx-font-weight: 600;
+}
+
+/* hover & focus effects */
+#roleComboBox:hover,
+#roleComboBox:focused {
+    -fx-border-color: #3B82F6; /* blue focus border */
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.3), 6, 0, 0, 2);
+}
+
+/* dropdown list cells */
+.combo-box-popup .list-cell {
+    -fx-background-color: white;
+    -fx-text-fill: #1E3A8A;
+    -fx-padding: 6 10;
+}
+
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: #E0E7FF; /* light blue hover */
+}
+
+/* arrow button on the right */
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.combo-box .arrow {
+    -fx-background-color: #2563EB; /* blue dropdown arrow */
+}
+

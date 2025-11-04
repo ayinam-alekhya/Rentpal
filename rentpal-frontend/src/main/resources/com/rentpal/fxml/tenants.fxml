@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import java.net.URL?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.rentpal.controllers.tenants.TenantsController"
+            prefWidth="1000" prefHeight="700">
+
+    <stylesheets>
+        <URL value="@/css/theme.css" />
+    </stylesheets>
+
+    <top>
+        <HBox spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+            <children>
+                <Label text="Tenants" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Button text="Add Tenant" onAction="#handleAddTenant" styleClass="action-btn"/>
+            </children>
+        </HBox>
+    </top>
+
+    <center>
+        <TableView fx:id="tenantsTable" prefHeight="600" prefWidth="900">
+            <columns>
+                <TableColumn fx:id="nameColumn" text="Name" prefWidth="200"/>
+                <TableColumn fx:id="unitColumn" text="Unit" prefWidth="150"/>
+                <TableColumn fx:id="contactColumn" text="Contact" prefWidth="200"/>
+                <TableColumn fx:id="statusColumn" text="Status" prefWidth="150"/>
+            </columns>
+        </TableView>
+    </center>
+
+</BorderPane>

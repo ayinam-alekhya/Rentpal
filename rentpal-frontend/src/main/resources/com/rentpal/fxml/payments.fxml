@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<?import java.net.URL?>
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.rentpal.controllers.payments.PaymentsController"
+            prefWidth="980" prefHeight="600"
+            styleClass="content-area">
+
+    <stylesheets>
+        <URL value="@/css/theme.css" />
+        <URL value="@/css/dashboard.css" />
+        <URL value="@/css/tables.css" />
+    </stylesheets>
+
+
+    <!-- 🟦 HEADER -->
+    <top>
+        <HBox spacing="10" styleClass="page-header">
+            <Label text="💳 Payments" styleClass="page-title"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <Button fx:id="addPaymentButton" text="+ Add Payment" styleClass="add-btn" onAction="#handleAddPayment"/>
+
+
+        </HBox>
+    </top>
+
+    <!-- 🟩 MAIN CONTENT -->
+    <center>
+        <VBox spacing="30" styleClass="main-content" alignment="TOP_CENTER">
+
+            <!-- ==== STAT CARDS ==== -->
+            <HBox spacing="30" alignment="CENTER" styleClass="stats-row" HBox.hgrow="ALWAYS">
+                <VBox styleClass="stat-card">
+                    <Label text="Total Collected" styleClass="stat-title"/>
+                    <Label fx:id="totalCollected" text="0" styleClass="stat-value"/>
+                </VBox>
+
+                <VBox styleClass="stat-card">
+                    <Label text="Pending Payments" styleClass="stat-title"/>
+                    <Label fx:id="pendingPayments" text="0" styleClass="stat-value"/>
+                </VBox>
+
+                <VBox styleClass="stat-card">
+                    <Label text="Overdue Payments" styleClass="stat-title"/>
+                    <Label fx:id="overduePayments" text="0" styleClass="stat-value"/>
+                </VBox>
+
+                <VBox styleClass="stat-card">
+                    <Label text="Refunded" styleClass="stat-title"/>
+                    <Label fx:id="refundedPayments" text="0" styleClass="stat-value"/>
+                </VBox>
+            </HBox>
+
+            <!-- ==== SEARCH + FILTER ==== -->
+            <HBox spacing="15" styleClass="filter-bar">
+                <TextField fx:id="searchField" promptText="Search by tenant..." styleClass="search-field"/>
+                <ComboBox fx:id="filterComboBox" prefWidth="150"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+            </HBox>
+
+            <!-- ==== TABLE ==== -->
+            <TableView fx:id="paymentsTable" prefHeight="350">
+                <columns>
+                    <TableColumn fx:id="colDate" text="Date" prefWidth="120"/>
+                    <TableColumn fx:id="colTenant" text="Tenant Name" prefWidth="200"/>
+                    <TableColumn fx:id="colAmount" text="Amount ($)" prefWidth="130"/>
+                    <TableColumn fx:id="colStatus" text="Status" prefWidth="130"/>
+                    <TableColumn fx:id="colMethod" text="Method" prefWidth="130"/>
+                </columns>
+            </TableView>
+
+        </VBox>
+    </center>
+
+</BorderPane>

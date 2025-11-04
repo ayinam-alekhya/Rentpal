@@ -1,0 +1,21 @@
+.DS_Store
+# build outputs
+target/
+build/
+out/
+*.class
+# Gradle/Maven caches
+.gradle/
+.mvn/
+**/target/
+**/build/
+# IDE
+.idea/
+*.iml
+.vscode/
+# local DB files
+*.db
+*.db.backup
+rentpal.db
+rentpal_new.db
+rentpal_new.db.backup

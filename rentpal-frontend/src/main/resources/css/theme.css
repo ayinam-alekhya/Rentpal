@@ -1,0 +1,59 @@
+/* ==== GLOBAL THEME ==== */
+.root, .content-area {
+    -fx-background-color: linear-gradient(to bottom right, #E8EEF9, #DDE6F5, #C7D2F9);
+    -fx-font-family: 'Segoe UI', 'Inter', sans-serif;
+}
+
+/* ==== CARDS (Base for all stat/chart cards) ==== */
+.card {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 16, 0.2, 0, 6);
+    -fx-padding: 20;
+    -fx-border-radius: 16;
+    -fx-border-color: rgba(0,0,0,0.08);
+    -fx-border-width: 1;
+    -fx-transition: all 0.2s ease-in-out;
+}
+
+.card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.4), 20, 0.3, 0, 8);
+    -fx-translate-y: -2;
+}
+
+/* ==== HEADINGS ==== */
+.page-title {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1E3A8A;
+}
+
+/* ==== BUTTONS ==== */
+.add-btn, .logout-btn {
+    -fx-background-color: linear-gradient(to right, #2563EB, #1E40AF);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-padding: 10 20;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.4), 10, 0.3, 0, 3);
+}
+.add-btn:hover, .logout-btn:hover {
+    -fx-background-color: linear-gradient(to right, #1D4ED8, #1E3A8A);
+    -fx-scale-x: 1.03;
+    -fx-scale-y: 1.03;
+}
+
+/* ==== COMBOBOX + TEXTFIELDS ==== */
+.combo-box, .text-field {
+    -fx-background-radius: 10;
+    -fx-background-color: #F1F5F9;
+    -fx-border-radius: 10;
+    -fx-border-color: #CBD5E1;
+    -fx-font-size: 14px;
+}
+.combo-box:hover, .text-field:focused {
+    -fx-border-color: #3B82F6;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.3), 6, 0, 0, 2);
+}
+

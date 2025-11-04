@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.rentpal.controllers.WelcomeController"
+            stylesheets="@/css/welcome.css"
+            prefWidth="1200" prefHeight="900">
+
+    <!-- Fixed Navigation Bar at Top -->
+    <HBox fx:id="navbar" styleClass="navbar" alignment="CENTER_LEFT" spacing="20"
+          AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <Button fx:id="loginButton" text="Login" onAction="#handleLogin" styleClass="nav-btn"/>
+        <Button fx:id="signupButton" text="Sign Up" onAction="#handleSignup" styleClass="nav-btn-primary"/>
+    </HBox>
+
+    <!-- ScrollPane with snap-to-section behavior -->
+    <ScrollPane fx:id="scrollPane" fitToWidth="true" prefWidth="1200" prefHeight="900"
+                AnchorPane.topAnchor="60.0" AnchorPane.leftAnchor="0.0"
+                AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                pannable="false" hbarPolicy="NEVER" vbarPolicy="ALWAYS"
+                style="-fx-background-color: transparent;">
+
+        <VBox fx:id="content" spacing="0" prefWidth="1200" styleClass="page-content">
+
+            <!-- HERO SECTION - Full viewport -->
+            <StackPane fx:id="heroSection" styleClass="section hero-section snap-section">
+                <VBox alignment="CENTER" spacing="40">
+
+                    <ImageView fx:id="heroImage" fitWidth="300" fitHeight="220"
+                               pickOnBounds="true" preserveRatio="true" styleClass="hero-image" opacity="0">
+                        <image>
+                            <Image url="@/images/hero_rentpal.png"/>
+                        </image>
+                    </ImageView>
+
+                    <VBox alignment="CENTER" spacing="24">
+                        <Text fx:id="heroTitle" text="Manage Rentals Effortlessly" styleClass="hero-title" opacity="1"/>
+                        <Text fx:id="heroSubtitle"
+                              text="Payments, maintenance &amp; communication — made human and delightful."
+                              styleClass="hero-subtitle" wrappingWidth="700" textAlignment="CENTER" opacity="1"/>
+                    </VBox>
+
+                    <Button fx:id="getStartedButton" text="Get Started"
+                            onAction="#handleGetStarted" styleClass="hero-cta-btn" opacity="1"/>
+
+                    <VBox alignment="CENTER" spacing="8" styleClass="scroll-indicator" opacity="1">
+                        <Text text="↓" styleClass="scroll-arrow"/>
+                        <Text text="Scroll to explore" styleClass="scroll-text"/>
+                    </VBox>
+                </VBox>
+            </StackPane>
+
+            <!-- FEATURE 1: Payments - Full viewport -->
+            <StackPane fx:id="featurePayments" styleClass="section feature-section snap-section">
+                <HBox spacing="100" alignment="CENTER" maxWidth="1200">
+                    <ImageView fitWidth="550" fitHeight="450" pickOnBounds="true"
+                               preserveRatio="true" styleClass="feature-image" opacity="1">
+                        <image><Image url="@/images/feature_payments.png"/></image>
+                    </ImageView>
+
+                    <VBox spacing="24" maxWidth="500" styleClass="feature-content" opacity="0">
+                        <Text text="Quick &amp; Secure Payments" styleClass="feature-head"/>
+                        <Text text="Pay rent in seconds, schedule recurring payments, and get instant receipts. Secure card and bank integrations coming soon."
+                              styleClass="feature-body" wrappingWidth="500"/>
+                        <Button text="How Payments Work" styleClass="outline-btn-large"/>
+                    </VBox>
+                </HBox>
+            </StackPane>
+
+            <!-- FEATURE 2: Tenant Management - Full viewport, reverse layout -->
+            <StackPane fx:id="featureTenants" styleClass="section feature-section snap-section reverse-bg">
+                <HBox spacing="100" alignment="CENTER" maxWidth="1200">
+                    <VBox spacing="24" maxWidth="500" styleClass="feature-content" opacity="0">
+                        <Text text="Tenant &amp; Owner Communication" styleClass="feature-head"/>
+                        <Text text="Message owners and tenants directly. Share documents and lease details inside the app for one place to manage everything."
+                              styleClass="feature-body" wrappingWidth="500"/>
+                        <Button text="See Communication" styleClass="outline-btn-large"/>
+                    </VBox>
+
+                    <ImageView fitWidth="550" fitHeight="450" pickOnBounds="true"
+                               preserveRatio="true" styleClass="feature-image" opacity="0">
+                        <image><Image url="@/images/feature_tenants.png"/></image>
+                    </ImageView>
+                </HBox>
+            </StackPane>
+
+            <!-- FEATURE 3: Analytics - Full viewport -->
+            <StackPane fx:id="featureAnalytics" styleClass="section feature-section snap-section">
+                <HBox spacing="100" alignment="CENTER" maxWidth="1200">
+                    <ImageView fitWidth="550" fitHeight="450" pickOnBounds="true"
+                               preserveRatio="true" styleClass="feature-image" opacity="0">
+                        <image><Image url="@/images/feature_analytics.png"/></image>
+                    </ImageView>
+
+                    <VBox spacing="24" maxWidth="500" styleClass="feature-content" opacity="0">
+                        <Text text="Smart Insights &amp; Reports" styleClass="feature-head"/>
+                        <Text text="See monthly summaries, past payments, and simple graphs to help you plan and understand trends."
+                              styleClass="feature-body" wrappingWidth="500"/>
+                        <Button text="View Demo" styleClass="outline-btn-large"/>
+                    </VBox>
+                </HBox>
+            </StackPane>
+
+            <!-- FEATURE 4: Complaints - Full viewport, reverse layout -->
+            <StackPane fx:id="featureComplaints" styleClass="section feature-section snap-section reverse-bg">
+                <HBox spacing="100" alignment="CENTER" maxWidth="1200">
+                    <VBox spacing="24" maxWidth="500" styleClass="feature-content" opacity="0">
+                        <Text text="Maintenance &amp; Complaint Tracking" styleClass="feature-head"/>
+                        <Text text="Raise issues, attach images, and follow status until resolution. Owners can respond and mark jobs complete."
+                              styleClass="feature-body" wrappingWidth="500"/>
+                        <Button text="Report an Issue" styleClass="outline-btn-large" onAction="#handleReportIssue"/>
+                    </VBox>
+
+                    <ImageView fitWidth="550" fitHeight="450" pickOnBounds="true"
+                               preserveRatio="true" styleClass="feature-image" opacity="0">
+                        <image><Image url="@/images/feature_complaints.png"/></image>
+                    </ImageView>
+                </HBox>
+            </StackPane>
+
+            <!-- CALL TO ACTION SECTION - Full viewport -->
+            <StackPane fx:id="ctaSection" styleClass="section cta-section snap-section">
+                <VBox alignment="CENTER" spacing="65">
+                    <Text text="Ready to simplify property management?" styleClass="cta-head" opacity="1"/>
+                    <Text text="Join hundreds of property owners and tenants already using RentPal."
+                          styleClass="cta-sub" wrappingWidth="600" textAlignment="CENTER" opacity="1"/>
+                    <!--                    <HBox spacing="16" opacity="0">-->
+                    <!--                        <Button text="Sign Up Free" onAction="#handleSignup" styleClass="cta-primary-btn"/>-->
+                    <!--                        <Button text="Login" onAction="#handleLogin" styleClass="cta-ghost-btn"/>-->
+                    <!--                    </HBox>-->
+                </VBox>
+            </StackPane>
+
+        </VBox>
+    </ScrollPane>
+</AnchorPane>

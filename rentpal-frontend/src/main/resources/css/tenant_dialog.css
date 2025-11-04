@@ -1,0 +1,109 @@
+/* ============================
+   🧾 ADD COMPLAINT FORM STYLING
+   ============================ */
+
+/* Main popup container */
+.dialog-pane {
+    -fx-background-color: linear-gradient(to bottom right, #F9FBFF, #EAF1FF);
+    -fx-background-radius: 20;
+    -fx-border-color: rgba(0, 0, 0, 0.05);
+    -fx-border-radius: 20;
+    -fx-padding: 25;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 4);
+    -fx-font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+/* Title at the top */
+.dialog-title {
+    -fx-font-size: 24px;              /* Match page titles */
+    -fx-font-weight: bold;
+    -fx-text-fill: #1E293B;           /* Same dark navy as dashboard */
+    -fx-padding: 0 0 15 0;
+    -fx-font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+
+/* Grid fields spacing */
+.grid-pane {
+    -fx-hgap: 10;
+    -fx-vgap: 15;
+}
+
+/* Labels beside fields */
+.label {
+    -fx-text-fill: #1E293B;
+    -fx-font-weight: 500;
+    -fx-font-size: 14px;
+}
+
+/* Input fields */
+.text-area, .text-field, .combo-box {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: #CBD5E1;
+    -fx-border-radius: 10;
+    -fx-padding: 8 10;
+    -fx-font-size: 14px;
+    -fx-text-fill: #1E293B;
+}
+
+.text-area {
+    -fx-pref-height: 100px;
+}
+
+.text-area:focused, .text-field:focused, .combo-box:focused {
+    -fx-border-color: #3B82F6;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.2), 6, 0, 0, 2);
+}
+
+/* Buttons */
+.primary-btn {
+    -fx-background-color: linear-gradient(to right, #2563EB, #1D4ED8);
+    -fx-text-fill: white;
+    -fx-background-radius: 10;
+    -fx-padding: 10 24;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 6, 0, 0, 2);
+}
+
+.primary-btn:hover {
+    -fx-background-color: linear-gradient(to right, #1E40AF, #1D4ED8);
+    -fx-scale-x: 1.03;
+    -fx-scale-y: 1.03;
+}
+
+.secondary-btn {
+    -fx-background-color: #EFF6FF;
+    -fx-text-fill: #1E3A8A;
+    -fx-background-radius: 10;
+    -fx-padding: 10 24;
+    -fx-font-weight: bold;
+    -fx-border-color: #BFDBFE;
+    -fx-border-radius: 10;
+    -fx-cursor: hand;
+}
+
+.secondary-btn:hover {
+    -fx-background-color: #DBEAFE;
+}
+
+/* Smooth hover animation */
+.button:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 8, 0, 0, 3);
+    -fx-transition: all 0.2s ease-in-out;
+}
+
+/* === Scrollbar cleanup for text areas === */
+.text-area .scroll-pane {
+    -fx-background-color: transparent;
+}
+.text-area .scroll-bar:vertical {
+    -fx-opacity: 0.6;
+    -fx-background-color: transparent;
+}
+.text-area .scroll-bar:vertical .thumb {
+    -fx-background-color: #90CAF9;
+    -fx-background-radius: 6;
+}
