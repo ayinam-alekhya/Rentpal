@@ -4,31 +4,40 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
 
+<?import java.net.URL?>
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.rentpal.controllers.tenantdashboard.TenantHomeController"
-      spacing="25" alignment="TOP_CENTER">
+      spacing="25" alignment="TOP_CENTER"
+      styleClass="content-area">
+
+
+    <stylesheets>
+        <URL value="@/css/theme.css"/>
+        <URL value="@/css/dashboard.css"/>
+        <URL value="@/css/tables.css"/>
+    </stylesheets>
       
     <padding>
         <Insets top="30" right="30" bottom="30" left="30"/>
     </padding>
 
-    <Label text="Welcome, Tenant!"/>
+    <Label text="Welcome, Tenant!" styleClass="page-title"/>
 
     <HBox spacing="30" alignment="CENTER">
-        <VBox>
-            <Label text="Total Rent Paid"/>
-            <Label fx:id="totalRentPaid" text="\$0.00"/>
+        <VBox styleClass="stat-card" alignment="CENTER">
+            <Label text="Total Rent Paid" styleClass="stat-title"/>
+            <Label fx:id="totalRentPaid" text="\$0.00" styleClass="stat-value"/>
         </VBox>
 
-        <VBox>
-            <Label text="Pending Dues"/>
-            <Label fx:id="pendingDues" text="\$0.00"/>
+        <VBox styleClass="stat-card" alignment="CENTER">
+            <Label text="Pending Dues" styleClass="stat-title"/>
+            <Label fx:id="pendingDues" text="\$0.00" styleClass="stat-value"/>
         </VBox>
 
-        <VBox>
-            <Label text="Complaints Raised"/>
-            <Label fx:id="complaintsRaised" text="0"/>
+        <VBox styleClass="stat-card" alignment="CENTER">
+            <Label text="Complaints Raised" styleClass="stat-title"/>
+            <Label fx:id="complaintsRaised" text="0" styleClass="stat-value"/>
         </VBox>
     </HBox>
 
