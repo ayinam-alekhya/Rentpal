@@ -9,160 +9,86 @@ import com.rentpal.utils.SessionManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import java.util.List;
 
 public class AddComplaintController {
 
-    @FXML
-    private ComboBox<OwnerDTO> ownerComboBox; // New owner selection dropdown
+    @FXML private Label ownerSelectionLabel;
+    @FXML private Label ownerNameLabel;
 
-    @FXML
-    private Label ownerSelectionLabel; // Label for owner selection
+    @FXML private ComboBox<String> categoryField;
+    @FXML private ComboBox<String> priorityField;
+    @FXML private TextArea descriptionField;
+    @FXML private Button submitButton;
 
-    @FXML
-    private ComboBox<String> categoryField;
+    private final ComplaintService complaintService = new ComplaintService();
+    @SuppressWarnings("unused")
+    private final OwnerService ownerService = new OwnerService();
 
-    @FXML
-    private ComboBox<String> priorityField;
-
-    @FXML
-    private TextArea descriptionField;
-
-    @FXML
-    private Button submitButton;
-
-    private ComplaintService complaintService = new ComplaintService();
-    private OwnerService ownerService = new OwnerService(); // New owner service
-    private Long selectedOwnerId; // To store the owner ID for the complaint
+    private Long ownerId; // resolved from tenant.getOwner()
 
     @FXML
     public void initialize() {
-        // Load owners into the combo box
-        loadOwners();
+        // Resolve logged-in tenant and its mapped owner
+        TenantDTO currentTenant = SessionManager.getInstance().getCurrentTenant();
 
-        // Sample categories
-        categoryField.getItems().addAll(
-                "Maintenance",
-                "Billing Issue",
-                "Noise Complaint",
-                "Security",
-                "Other"
-        );
-
-        // Priority levels
-        priorityField.getItems().addAll("Low", "Medium", "High");
-    }
-
-    private void loadOwners() {
-        try {
-            List<OwnerDTO> owners = ownerService.getAllOwners();
-            ownerComboBox.getItems().addAll(owners);
-            
-            // Set converter to display owner name in combo box
-            ownerComboBox.setConverter(new javafx.util.StringConverter<OwnerDTO>() {
-                @Override
-                public String toString(OwnerDTO owner) {
-                    return owner != null ? owner.getName() : "";
-                }
-
-                @Override
-                public OwnerDTO fromString(String string) {
-                    return ownerComboBox.getItems().stream()
-                            .filter(owner -> owner.getName().equals(string))
-                            .findFirst()
-                            .orElse(null);
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Failed to load owners: " + e.getMessage());
+        if (currentTenant != null && currentTenant.getOwner() != null) {
+            OwnerDTO mappedOwner = currentTenant.getOwner();
+            ownerId = mappedOwner.getOwnerId();
+            String display =
+                    (mappedOwner.getName() != null && !mappedOwner.getName().isBlank())
+                            ? mappedOwner.getName()
+                            : "Owner #" + ownerId;
+            ownerNameLabel.setText(display);
+        } else {
+            // No owner info on the DTO; keep label but prevent submit
+            ownerId = null;
+            ownerNameLabel.setText("Unknown Owner");
         }
+
+        categoryField.getItems().setAll("Maintenance", "Billing Issue", "Noise Complaint", "Security", "Other");
+        priorityField.getItems().setAll("Low", "Medium", "High");
     }
 
     @FXML
     private void handleSubmit() {
-        // Validate Owner selection
-        OwnerDTO selectedOwner = ownerComboBox.getValue();
-        if (selectedOwner == null) {
-            markInvalid(ownerComboBox);
-            showAlert(Alert.AlertType.WARNING, "Missing Information", "Please select an owner");
+        String category = categoryField.getValue();
+        String priority  = priorityField.getValue();
+        String description = descriptionField.getText() == null ? "" : descriptionField.getText().trim();
+
+        if (ownerId == null) {
+            showAlert(Alert.AlertType.ERROR, "Owner Missing",
+                    "Your account isn’t mapped to an owner. Please re-login or contact support.");
             return;
         }
-        selectedOwnerId = selectedOwner.getOwnerId();
-
-        String category = categoryField.getValue();
-        String priority = priorityField.getValue();
-        String description = descriptionField.getText().trim();
-
         if (category == null || priority == null || description.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Missing Information", "Please fill all required fields");
+            showAlert(Alert.AlertType.WARNING, "Missing Information",
+                    "Please select category, priority and enter a description.");
             return;
         }
 
         try {
-            // Get current tenant from session
             TenantDTO currentTenant = SessionManager.getInstance().getCurrentTenant();
-            if (currentTenant != null) {
-                // Create complaint DTO
-                ComplaintDTO complaint = new ComplaintDTO();
-                complaint.setTitle(category);
-                complaint.setDescription(description);
-                complaint.setStatus("Pending"); // Default status
-                complaint.setOwnerId(selectedOwnerId); // Set the selected owner ID
-                
-                // Save to backend
-                ComplaintDTO createdComplaint = complaintService.addComplaint(currentTenant.getTenantId(), complaint);
-                
-                // Show success message
-                showAlert(Alert.AlertType.INFORMATION, "Complaint Submitted", "Complaint Added Successfully", 
-                         "Your complaint has been recorded successfully.");
-                
-                // Notify owner dashboard to refresh complaints
-                notifyOwnerDashboard();
-                
-                closeForm();
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Error", "Authentication Error", "Please log in again.");
+            if (currentTenant == null || currentTenant.getTenantId() == null) {
+                showAlert(Alert.AlertType.ERROR, "Authentication Error", "Please log in again.");
+                return;
             }
+
+            ComplaintDTO complaint = new ComplaintDTO();
+            complaint.setTitle(category);
+            complaint.setDescription(description);
+            complaint.setStatus("Pending");
+            complaint.setOwnerId(ownerId); // use mapped owner
+
+            complaintService.addComplaint(currentTenant.getTenantId(), complaint);
+
+            showAlert(Alert.AlertType.INFORMATION, "Complaint Submitted",
+                    "Your complaint has been recorded successfully.");
+            closeForm();
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Failed to submit complaint", 
-                     "An error occurred while submitting your complaint: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Failed to submit complaint",
+                    "An error occurred while submitting your complaint:\n" + e.getMessage());
         }
-    }
-
-    private void markInvalid(Control control) {
-        control.setStyle("-fx-border-color: red;");
-        control.focusedProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                control.setStyle("");
-            }
-        });
-    }
-
-    private void showAlert(Alert.AlertType alertType, String title, String header, String content) {
-        Alert alert = new Alert(alertType);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
-    private void showAlert(Alert.AlertType alertType, String title, String content) {
-        Alert alert = new Alert(alertType);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
-    private void notifyOwnerDashboard() {
-        // In a real application, this would send a notification to the owner dashboard
-        // For now, we'll just print a message to the console
-        System.out.println("Complaint submitted - owner dashboard should refresh");
-        
-        // If we had access to the owner dashboard controller, we could call:
-        // ownerDashboardController.refreshComplaints();
     }
 
     @FXML
@@ -173,5 +99,13 @@ public class AddComplaintController {
     private void closeForm() {
         Stage stage = (Stage) submitButton.getScene().getWindow();
         stage.close();
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

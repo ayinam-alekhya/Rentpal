@@ -3,6 +3,7 @@ package com.rentpal.rentpal_backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rentpal.rentpal_backend.dto.TenantSummaryDTO;
 import com.rentpal.rentpal_backend.model.Tenant;
+import com.rentpal.rentpal_backend.dto.CreateTenantRequest;
 import com.rentpal.rentpal_backend.service.TenantService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,7 @@ public class TenantControllerTest {
     private ObjectMapper objectMapper;
 
     private Tenant testTenant;
+    private CreateTenantRequest req;
     private TenantSummaryDTO testTenantSummary;
 
     @BeforeEach
@@ -64,29 +66,29 @@ public class TenantControllerTest {
                 .andExpect(jsonPath("$[0].name").value("Test Tenant"));
     }
 
-    @Test
+ @Test
     public void testCreateTenant() throws Exception {
-        // Create a simple tenant object for JSON serialization
-        Tenant simpleTenant = new Tenant();
-        simpleTenant.setName("Test Tenant");
-        simpleTenant.setEmail("tenant@test.com");
-        simpleTenant.setPhone("0987654321");
-        simpleTenant.setRoomNumber("A101");
-        simpleTenant.setRentAmount(1000.0);
-        simpleTenant.setStatus("Active");
-        simpleTenant.setRemainingRent(0.0);
-        simpleTenant.setPaymentStatus("Unpaid");
-        
-        // Mock the tenantService
-        when(tenantService.createTenant(any(Tenant.class))).thenReturn(testTenant);
+        // Create request payload
+        req = new CreateTenantRequest();
+        req.setName("Test Tenant");
+        req.setEmail("tenant@test.com");
+        req.setPhone("0987654321");
+        req.setRoomNumber("A101");
+        req.setRentAmount(1000.0);
+        req.setOwnerId(1L);
 
-        // Perform the request and verify the response
+        // Mock service
+        when(tenantService.createTenant(any(com.rentpal.rentpal_backend.dto.CreateTenantRequest.class)))
+                .thenReturn(testTenant);
+
+        // Perform request
         mockMvc.perform(post("/api/tenants")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(simpleTenant)))
+                .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("tenant@test.com"));
     }
+
 
     @Test
     public void testGetTenantById() throws Exception {

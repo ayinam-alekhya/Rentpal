@@ -162,6 +162,45 @@
     -fx-padding: 0 0 15 0;
 }
 
+/* ==== OWNER COMBOBOX (used in Signup.fxml) ==== */
+#ownerCombo {
+    -fx-background-color: linear-gradient(to right, #F8FAFC, #EEF2FF);
+    -fx-border-color: #93C5FD;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-font-size: 14px;
+    -fx-text-fill: #1E3A8A;
+    -fx-padding: 6 12;
+    -fx-pref-width: 240;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.2), 8, 0, 0, 2);
+}
+
+/* Hover + focus states */
+#ownerCombo:hover, #ownerCombo:focused {
+    -fx-border-color: #3B82F6;
+    -fx-background-color: linear-gradient(to right, #E0F2FE, #DBEAFE);
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.3), 10, 0.2, 0, 3);
+}
+
+/* Popup list styling */
+.combo-box-popup .list-view {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #BFDBFE;
+    -fx-border-radius: 8;
+}
+
+.combo-box-popup .list-cell {
+    -fx-padding: 6 10;
+    -fx-font-size: 13px;
+    -fx-text-fill: #1E3A8A;
+}
+
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: #DBEAFE;
+}
+
+
 /* ==== ROLE SELECTION DROPDOWN ==== */
 #roleComboBox {
     -fx-background-color: #F1F5F9;

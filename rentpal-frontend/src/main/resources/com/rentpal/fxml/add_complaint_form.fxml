@@ -28,10 +28,11 @@
                 <ColumnConstraints halignment="LEFT" prefWidth="300"/>
             </columnConstraints>
 
-            <!-- Owner Selection (visible for tenants) -->
-            <Label fx:id="ownerSelectionLabel" text="Select Owner:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-            <ComboBox fx:id="ownerComboBox" promptText="Select owner"
-                      GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+            <!-- Owner Name (auto-filled for tenants) -->
+            <Label fx:id="ownerSelectionLabel" text="Owner:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <Label fx:id="ownerNameLabel" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="readonly-field"/>
+
+
 
             <Label text="Category:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
             <ComboBox fx:id="categoryField" GridPane.rowIndex="1" GridPane.columnIndex="1"

@@ -9,6 +9,7 @@ public class UserRegistrationDTO {
     private String address;
     private String roomNumber;
     private Double rentAmount;
+    private Long ownerId;
 
     // Constructors
     public UserRegistrationDTO() {}

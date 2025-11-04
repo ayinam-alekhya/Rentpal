@@ -34,8 +34,8 @@ public class Tenant {
 
     // ✅ Many tenants belong to one owner
     // For signup, owner can be null initially and assigned later
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = true)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
     private Owner owner;
 
     // ✅ One tenant can have many payments
