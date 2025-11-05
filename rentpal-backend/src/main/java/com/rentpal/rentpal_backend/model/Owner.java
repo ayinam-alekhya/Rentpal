@@ -25,7 +25,7 @@ public class Owner {
     // Optional normalization improvement: prepare for expansion
     private String address;
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.PERSIST)
     private List<Tenant> tenants = new ArrayList<>();
 
     // One owner can have many properties

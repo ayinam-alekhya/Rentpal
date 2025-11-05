@@ -7,141 +7,94 @@ import com.rentpal.utils.SceneSwitcher;
 import com.rentpal.utils.SessionManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 
 public class LoginController {
 
-    @FXML
-    private TextField emailField;
+    @FXML private TextField emailField;
+    @FXML private PasswordField passwordField;
 
-    @FXML
-    private PasswordField passwordField;
+    // NEW: role controls (radio buttons)
+    @FXML private RadioButton ownerRadio;   // selected = owner login
+    @FXML private RadioButton tenantRadio;  // selected = tenant login
 
-    private AuthService authService = new AuthService();
+    private final AuthService authService = new AuthService();
 
-    // ✅ Handles login button click
     @FXML
     private void handleLogin(ActionEvent event) {
         String email = emailField.getText().trim();
         String password = passwordField.getText().trim();
 
-        System.out.println("Login attempt for: " + email);
-
         if (email.isEmpty() || password.isEmpty()) {
-            System.out.println("Missing email or password");
             showAlert(Alert.AlertType.WARNING, "Missing Fields", "Please enter both email and password.");
             return;
         }
 
+        // Determine role exactly once
+        String role = resolveRole();
+        System.out.println("Login attempt for: " + email + " as role: " + role);
+
         try {
-            // Try to authenticate as owner first
-            System.out.println("Attempting owner authentication...");
-            AuthService.AuthResult result = authenticateAsOwner(email, password);
-            
-            if (result.isSuccess()) {
-                System.out.println("Owner authentication successful");
-                handleSuccessfulOwnerLogin(result.getOwner(), event);
+            AuthService.AuthResult result = authService.authenticate(email, password, role);
+
+            if (!result.isSuccess()) {
+                showAlert(Alert.AlertType.ERROR, "Login Failed", "Invalid email or password.");
                 return;
             }
 
-            // If owner authentication fails, try as tenant
-            System.out.println("Owner authentication failed, trying tenant authentication...");
-            result = authenticateAsTenant(email, password);
-            
-            if (result.isSuccess()) {
-                System.out.println("Tenant authentication successful");
-                handleSuccessfulTenantLogin(result.getTenant(), event);
-                return;
+            // Route by role
+            if ("owner".equalsIgnoreCase(role)) {
+                OwnerDTO owner = result.getOwner();
+                if (owner == null) {
+                    showAlert(Alert.AlertType.ERROR, "Login Failed", "Owner details missing in response.");
+                    return;
+                }
+                SessionManager.getInstance().setCurrentOwner(owner);
+                SceneSwitcher.switchScene(event, "/com/rentpal/fxml/owner_dashboard.fxml");
+            } else {
+                TenantDTO tenant = result.getTenant();
+                if (tenant == null) {
+                    showAlert(Alert.AlertType.ERROR, "Login Failed", "Tenant details missing in response.");
+                    return;
+                }
+                SessionManager.getInstance().setCurrentTenant(tenant);
+                SceneSwitcher.switchScene(event, "/com/rentpal/fxml/tenant_dashboard.fxml");
             }
 
-            // If both fail
-            System.out.println("Both owner and tenant authentication failed");
-            showAlert(Alert.AlertType.ERROR, "Login Failed", "Invalid email or password.");
         } catch (Exception e) {
-            System.err.println("Error during login process: " + e.getMessage());
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "An unexpected error occurred while logging in: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Network Error", e.getMessage());
         }
     }
 
-    private AuthService.AuthResult authenticateAsOwner(String email, String password) {
-        try {
-            return authService.authenticate(email, password, "owner");
-        } catch (Exception e) {
-            System.err.println("Owner authentication error: " + e.getMessage());
-            return new AuthService.AuthResult(false, null, null, null);
-        }
+    private String resolveRole() {
+        // If you wired radio buttons:
+        if (ownerRadio != null && ownerRadio.isSelected()) return "owner";
+        if (tenantRadio != null && tenantRadio.isSelected()) return "tenant";
+
+        // If you used a ComboBox<String> roleCombo instead, return roleCombo.getValue()
+        // Fallback default:
+        return "owner";
     }
 
-    private AuthService.AuthResult authenticateAsTenant(String email, String password) {
-        try {
-            return authService.authenticate(email, password, "tenant");
-        } catch (Exception e) {
-            System.err.println("Tenant authentication error: " + e.getMessage());
-            return new AuthService.AuthResult(false, null, null, null);
-        }
-    }
-
-    private void handleSuccessfulOwnerLogin(OwnerDTO owner, ActionEvent event) {
-        try {
-            System.out.println("Handling successful owner login for: " + owner.getName());
-            SessionManager.getInstance().setCurrentOwner(owner);
-            SceneSwitcher.switchScene(event, "/com/rentpal/fxml/owner_dashboard.fxml");
-        } catch (Exception e) {
-            System.err.println("Error handling owner login: " + e.getMessage());
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Failed to load owner dashboard: " + e.getMessage());
-        }
-    }
-
-    private void handleSuccessfulTenantLogin(TenantDTO tenant, ActionEvent event) {
-        try {
-            System.out.println("Handling successful tenant login for: " + tenant.getName());
-            SessionManager.getInstance().setCurrentTenant(tenant);
-            SceneSwitcher.switchScene(event, "/com/rentpal/fxml/tenant_dashboard.fxml");
-        } catch (Exception e) {
-            System.err.println("Error handling tenant login: " + e.getMessage());
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Failed to load tenant dashboard: " + e.getMessage());
-        }
-    }
-
-    // ✅ Handles "Forgot Password" link or button click
     @FXML
     private void handleForgotPassword(ActionEvent event) {
-        try {
-            SceneSwitcher.switchScene(event, "/com/rentpal/fxml/forgot_password.fxml");
-        } catch (Exception e) {
-            System.err.println("Error navigating to forgot password: " + e.getMessage());
-            e.printStackTrace();
-        }
+        try { SceneSwitcher.switchScene(event, "/com/rentpal/fxml/forgot_password.fxml"); }
+        catch (Exception e) { e.printStackTrace(); }
     }
 
-    // ✅ Handles "Sign Up" link or button click
     @FXML
     private void handleSignUp(ActionEvent event) {
-        try {
-            SceneSwitcher.switchScene(event, "/com/rentpal/fxml/signup.fxml");
-        } catch (Exception e) {
-            System.err.println("Error navigating to signup: " + e.getMessage());
-            e.printStackTrace();
-        }
+        try { SceneSwitcher.switchScene(event, "/com/rentpal/fxml/signup.fxml"); }
+        catch (Exception e) { e.printStackTrace(); }
     }
 
-    // ✅ Handles "Back to Home" button click
     @FXML
     private void handleBackToHome(ActionEvent event) {
-        try {
-            SceneSwitcher.switchToWelcome(event);
-        } catch (Exception e) {
-            System.err.println("Error navigating to home: " + e.getMessage());
-            e.printStackTrace();
-        }
+        try { SceneSwitcher.switchToWelcome(event); }
+        catch (Exception e) { e.printStackTrace(); }
     }
 
-    // ✅ Utility method for showing alerts
     private void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);

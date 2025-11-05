@@ -19,62 +19,50 @@ import java.util.List;
 
 public class TenantComplaintsController {
 
-    @FXML
-    private TextField searchComplaints;
-    
-    @FXML
-    private ComboBox<String> filterComboBox;
-    
-    @FXML
-    private TableView<ComplaintDTO> complaintsTable;
-    
-    @FXML
-    private TableColumn<ComplaintDTO, Long> colId;
-    
-    @FXML
-    private TableColumn<ComplaintDTO, String> colCategory;
-    
-    @FXML
-    private TableColumn<ComplaintDTO, String> colDescription;
-    
-    @FXML
-    private Button addComplaint;
-    
-    private ComplaintService complaintService = new ComplaintService();
-    private ObservableList<ComplaintDTO> complaintData = FXCollections.observableArrayList();
-    private ObservableList<ComplaintDTO> filteredComplaintData = FXCollections.observableArrayList();
-    
+    @FXML private TextField searchComplaints;
+    @FXML private ComboBox<String> filterComboBox;
+
+    @FXML private TableView<ComplaintDTO> complaintsTable;
+    @FXML private TableColumn<ComplaintDTO, Long>   colId;
+    @FXML private TableColumn<ComplaintDTO, String> colCategory;
+    @FXML private TableColumn<ComplaintDTO, String> colDescription;
+    @FXML private TableColumn<ComplaintDTO, String> colStatus;   // <-- NEW
+
+    @FXML private Button addComplaint;
+
+    private final ComplaintService complaintService = new ComplaintService();
+    private final ObservableList<ComplaintDTO> complaintData         = FXCollections.observableArrayList();
+    private final ObservableList<ComplaintDTO> filteredComplaintData = FXCollections.observableArrayList();
+
     @FXML
     public void initialize() {
-        // Initialize filter combo box
-        filterComboBox.setItems(FXCollections.observableArrayList("All", "Open", "In Progress", "Resolved"));
+        // Use the exact statuses your backend returns (adjust if yours are different)
+        // Common: "Pending", "In Progress", "Resolved"
+        filterComboBox.setItems(FXCollections.observableArrayList("All", "Pending", "In Progress", "Resolved"));
         filterComboBox.setValue("All");
-        
-        // Initialize table columns
+
+        // Table columns
         colId.setCellValueFactory(new PropertyValueFactory<>("complaintId"));
         colCategory.setCellValueFactory(new PropertyValueFactory<>("title"));
         colDescription.setCellValueFactory(new PropertyValueFactory<>("description"));
-        
-        // Set table items
+        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));   // <-- show status
+
         complaintsTable.setItems(filteredComplaintData);
-        
-        // Add listeners
-        filterComboBox.valueProperty().addListener((observable, oldValue, newValue) -> filterComplaints());
-        searchComplaints.textProperty().addListener((observable, oldValue, newValue) -> filterComplaints());
-        
-        // Load complaint data
+
+        // Listeners
+        filterComboBox.valueProperty().addListener((obs, o, n) -> filterComplaints());
+        searchComplaints.textProperty().addListener((obs, o, n) -> filterComplaints());
+
+        // Load data
         loadComplaintData();
     }
-    
+
     @FXML
     private void handleAddComplaint() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/rentpal/fxml/add_complaint_form.fxml"));
             Parent root = loader.load();
-
-            root.getStylesheets().add(
-                    getClass().getResource("/css/tenant_dashboard.css").toExternalForm()
-            );
+            root.getStylesheets().add(getClass().getResource("/css/tenant_dashboard.css").toExternalForm());
 
             Stage popup = new Stage();
             popup.setTitle("Add Complaint");
@@ -82,29 +70,21 @@ public class TenantComplaintsController {
             popup.initModality(Modality.APPLICATION_MODAL);
             popup.setResizable(false);
             popup.showAndWait();
-            
-            // Refresh complaints after adding
-            loadComplaintData();
 
+            loadComplaintData(); // refresh after add
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to open add complaint form: " + e.getMessage());
         }
     }
-    
+
     public void loadComplaintData() {
         try {
-            // Get current tenant from session
             TenantDTO currentTenant = SessionManager.getInstance().getCurrentTenant();
             if (currentTenant != null) {
                 Long tenantId = currentTenant.getTenantId();
-                
-                // Load complaints for this tenant
                 List<ComplaintDTO> complaints = complaintService.getComplaintsByTenant(tenantId);
-                complaintData.clear();
-                complaintData.addAll(complaints);
-                
-                // Update filtered data
+                complaintData.setAll(complaints);
                 filterComplaints();
             }
         } catch (Exception e) {
@@ -112,32 +92,29 @@ public class TenantComplaintsController {
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to load complaint data: " + e.getMessage());
         }
     }
-    
+
     private void filterComplaints() {
-        try {
-            String filter = filterComboBox.getValue();
-            String search = searchComplaints.getText().toLowerCase();
-            
-            filteredComplaintData.clear();
-            
-            for (ComplaintDTO complaint : complaintData) {
-                boolean matchesFilter = "All".equals(filter) || 
-                                       (filter != null && filter.equalsIgnoreCase(complaint.getStatus()));
-                
-                boolean matchesSearch = search.isEmpty() || 
-                                       (complaint.getTitle() != null && complaint.getTitle().toLowerCase().contains(search)) ||
-                                       (complaint.getDescription() != null && complaint.getDescription().toLowerCase().contains(search)) ||
-                                       String.valueOf(complaint.getComplaintId()).contains(search);
-                
-                if (matchesFilter && matchesSearch) {
-                    filteredComplaintData.add(complaint);
-                }
+        String filter = filterComboBox.getValue();
+        String search = searchComplaints.getText() == null ? "" : searchComplaints.getText().toLowerCase();
+
+        filteredComplaintData.clear();
+
+        for (ComplaintDTO c : complaintData) {
+            String status = c.getStatus() == null ? "" : c.getStatus();
+            boolean statusMatch = "All".equalsIgnoreCase(filter) || filter.equalsIgnoreCase(status);
+
+            boolean searchMatch =
+                    search.isEmpty()
+                    || (c.getTitle() != null && c.getTitle().toLowerCase().contains(search))
+                    || (c.getDescription() != null && c.getDescription().toLowerCase().contains(search))
+                    || String.valueOf(c.getComplaintId()).contains(search);
+
+            if (statusMatch && searchMatch) {
+                filteredComplaintData.add(c);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
-    
+
     private void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);

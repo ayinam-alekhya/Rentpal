@@ -7,8 +7,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.*;
-import com.rentpal.controllers.payments.AddPaymentController;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;          // TableView, TableColumn, Button, Label, ComboBox, etc.
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -101,63 +104,42 @@ public class PaymentsController {
     @FXML
     private void handleAddPayment() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/rentpal/fxml/add_payment_dialog.fxml"));
-
-            DialogPane dialogPane = loader.load();
-
-            // ✅ Load dialog CSS for styling
-            dialogPane.getStylesheets().add(getClass().getResource("/css/dialog.css").toExternalForm());
+            // Open the Add Payment FORM (with the tenant dropdown)
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/com/rentpal/fxml/add_payment_dialog.fxml")); 
+            Parent root = loader.load();
 
             AddPaymentController controller = loader.getController();
-            
-            // Check if a tenant is selected in the payments table
-            Payment selectedPayment = paymentsTable.getSelectionModel().getSelectedItem();
-            if (selectedPayment != null && selectedPayment.getTenantId() != null && selectedPayment.getTenantId() > 0) {
-                // Pass the tenant information to the AddPaymentController
-                controller.setTenantInfo(selectedPayment.getTenant(), selectedPayment.getTenantId());
-            } else {
-                // For owner dashboard, show a dialog to select tenant or enter manually
-                // Create a simple dialog to get tenant information
-                TextInputDialog dialog = new TextInputDialog();
-                dialog.setTitle("Enter Tenant ID");
-                dialog.setHeaderText("Tenant ID Required");
-                dialog.setContentText("Please enter the Tenant ID for this payment:");
-                
-                // Show the dialog and wait for user input
-                dialog.showAndWait().ifPresent(tenantIdStr -> {
-                    try {
-                        Long tenantId = Long.parseLong(tenantIdStr);
-                        controller.setTenantInfo("Manual Entry", tenantId);
-                    } catch (NumberFormatException e) {
-                        showAlert(Alert.AlertType.ERROR, "Error", "Invalid Tenant ID format. Please enter a valid number.");
-                        return;
-                    }
-                });
+
+            // Optional: if you want to preselect a tenant based on the selected row
+            Payment selected = paymentsTable.getSelectionModel().getSelectedItem();
+            if (selected != null && selected.getTenantId() != null && selected.getTenantId() > 0) {
+                controller.setTenantInfo(selected.getTenant(), selected.getTenantId());
             }
+            // If nothing is selected, the form will show the ComboBox for owner to choose
 
-            Dialog<ButtonType> dialog = new Dialog<>();
-            dialog.setDialogPane(dialogPane);
-            dialog.setTitle("Add New Payment");
+            // Show as a modal dialog (no TextInputDialog)
+            Stage stage = new Stage();
+            stage.setTitle("+ Add Payment");
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.setResizable(false);
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.showAndWait();
 
-            // Show the dialog and wait for user to close
-            dialog.showAndWait();
-
-            // Retrieve new payment (if user pressed Save)
+            // If a payment was created, refresh table & stats
             Payment newPayment = controller.getNewPayment();
             if (newPayment != null) {
-                paymentsTable.getItems().add(newPayment);
+                // Either append or just reload from backend:
+                // paymentsTable.getItems().add(newPayment);
+                loadPaymentsFromBackend(); // keeps things in sync with backend
                 updateStats();
             }
-
-            // Refresh the payment list after adding a new payment
-            loadPaymentsFromBackend();
-
         } catch (Exception e) {
             e.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Failed to load Add Payment dialog.");
-            alert.showAndWait();
+            showAlert(Alert.AlertType.ERROR, "Error", "Failed to open Add Payment: " + e.getMessage());
         }
     }
+
 
     private void updateStats() {
         if (paymentsTable.getItems() == null) {

@@ -17,15 +17,25 @@ public class Complaint {
         this.date = new SimpleStringProperty(date);
     }
 
+    // --- properties
     public IntegerProperty idProperty() { return id; }
     public StringProperty tenantProperty() { return tenant; }
     public StringProperty issueProperty() { return issue; }
     public StringProperty statusProperty() { return status; }
     public StringProperty dateProperty() { return date; }
 
+    // --- getters
     public int getId() { return id.get(); }
     public String getTenant() { return tenant.get(); }
     public String getIssue() { return issue.get(); }
     public String getStatus() { return status.get(); }
     public String getDate() { return date.get(); }
+
+    // --- setters (add at least this one so status edits can commit)
+    public void setStatus(String value) { this.status.set(value); }
+
+    // (optional) if you later want to edit these columns too:
+    public void setIssue(String value) { this.issue.set(value); }
+    public void setTenant(String value) { this.tenant.set(value); }
+    public void setDate(String value) { this.date.set(value); }
 }

@@ -6,6 +6,7 @@ import com.rentpal.rentpal_backend.model.Tenant;
 import com.rentpal.rentpal_backend.repository.OwnerRepository;
 import com.rentpal.rentpal_backend.repository.TenantRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -17,6 +18,12 @@ public class AuthService {
 
     @Autowired
     private TenantRepository tenantRepository;
+      public AuthService(OwnerRepository ownerRepo, TenantRepository tenantRepo,
+                     @Value("${spring.datasource.url}") String url) {
+    this.ownerRepository = ownerRepo;
+    this.tenantRepository = tenantRepo;
+    System.out.println("=== JDBC URL === " + url);
+  }
 
     public Owner registerOwner(UserRegistrationDTO registrationDTO) {
         Owner owner = new Owner();

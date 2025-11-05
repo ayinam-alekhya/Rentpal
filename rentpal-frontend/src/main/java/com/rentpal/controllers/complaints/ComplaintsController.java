@@ -6,9 +6,17 @@ import com.rentpal.utils.SessionManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-
+import javafx.scene.control.TableView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Alert;
+import javafx.scene.control.cell.ComboBoxTableCell;
+import javafx.util.StringConverter;
 import java.util.List;
+import javafx.scene.control.TableCell;
+
+
 
 public class ComplaintsController {
 
@@ -23,26 +31,94 @@ public class ComplaintsController {
     @FXML private TableColumn<Complaint, String> colDate;
 
     private ObservableList<Complaint> complaintsData;
+    private static final ObservableList<String> STATUS_OPTIONS =
+        FXCollections.observableArrayList("Pending", "In Progress", "Resolved", "Rejected");
     private ComplaintService complaintService = new ComplaintService();
 
     @FXML
     public void initialize() {
-        // Setup filters
-        filterComboBox.setItems(FXCollections.observableArrayList("All", "Pending", "In Progress", "Resolved"));
+        // filters
+        filterComboBox.setItems(FXCollections.observableArrayList("All", "Pending", "In Progress", "Resolved", "Rejected"));
         filterComboBox.getSelectionModel().select("All");
 
-        // Map table columns
+        // map columns
         colId.setCellValueFactory(cell -> cell.getValue().idProperty());
         colTenant.setCellValueFactory(cell -> cell.getValue().tenantProperty());
         colIssue.setCellValueFactory(cell -> cell.getValue().issueProperty());
         colStatus.setCellValueFactory(cell -> cell.getValue().statusProperty());
         colDate.setCellValueFactory(cell -> cell.getValue().dateProperty());
 
-        // Load complaints from backend
+        // Make table editable only for owners
+        boolean isOwner = SessionManager.getInstance().isOwner() && SessionManager.getInstance().getCurrentOwner() != null;
+        complaintsTable.setEditable(isOwner);
+
+        if (isOwner) {
+            // Show a ComboBox editor in the Status column for owners
+            colStatus.setCellFactory(column -> {
+                ComboBoxTableCell<Complaint, String> cell = new ComboBoxTableCell<>(STATUS_OPTIONS);
+                // Optional: pretty converter (identity here, but future-proof)
+                cell.setConverter(new StringConverter<>() {
+                    @Override public String toString(String s) { return s; }
+                    @Override public String fromString(String s) { return s; }
+                });
+                return cell;
+            });
+
+            colStatus.setOnEditCommit(evt -> {
+                Complaint row = evt.getRowValue();
+                String oldVal = evt.getOldValue();
+                String newVal = evt.getNewValue();
+
+                if (newVal == null || newVal.isBlank() || newVal.equals(oldVal)) {
+                    // nothing to do
+                    complaintsTable.refresh();
+                    return;
+                }
+
+                try {
+                    // backend update
+                    complaintService.updateComplaintStatus((long) row.getId(), newVal);
+                    // reflect success in UI model
+                    row.setStatus(newVal);
+                    complaintsTable.refresh();
+                } catch (Exception e) {
+                    // revert on error
+                    row.setStatus(oldVal);
+                    complaintsTable.refresh();
+                    showAlert(Alert.AlertType.ERROR, "Update Failed",
+                            "Could not update status: " + e.getMessage());
+                }
+            });
+        } else {
+            // Tenants: ensure plain, non-editable cells
+            colStatus.setCellFactory(column -> new TableCell<>() {
+                @Override protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty ? null : item);
+                }
+            });
+        }
+
+        // load + auto refresh
         loadComplaintsFromBackend();
-        
-        // Add listeners for real-time updates
         addRealTimeUpdateListeners();
+
+        // (Optional) filter behavior
+        filterComboBox.valueProperty().addListener((obs, ov, nv) -> applyFilter(nv));
+        searchField.textProperty().addListener((obs, ov, nv) -> applyFilter(filterComboBox.getValue()));
+    }
+
+    private void applyFilter(String statusFilter) {
+        if (complaintsData == null) return;
+        complaintsTable.setItems(complaintsData.filtered(c -> {
+            boolean matchesStatus = "All".equalsIgnoreCase(statusFilter) || c.getStatus().equalsIgnoreCase(statusFilter);
+            String q = searchField.getText() == null ? "" : searchField.getText().trim().toLowerCase();
+            boolean matchesSearch = q.isEmpty()
+                    || String.valueOf(c.getId()).contains(q)
+                    || (c.getIssue() != null && c.getIssue().toLowerCase().contains(q))
+                    || (c.getTenant() != null && c.getTenant().toLowerCase().contains(q));
+            return matchesStatus && matchesSearch;
+        }));
     }
 
     private void loadComplaintsFromBackend() {

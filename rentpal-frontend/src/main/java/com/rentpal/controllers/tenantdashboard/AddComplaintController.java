@@ -1,6 +1,5 @@
 package com.rentpal.controllers.tenantdashboard;
 
-import com.rentpal.dto.ComplaintDTO;
 import com.rentpal.dto.OwnerDTO;
 import com.rentpal.dto.TenantDTO;
 import com.rentpal.service.ComplaintService;
@@ -9,6 +8,9 @@ import com.rentpal.utils.SessionManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class AddComplaintController {
 
@@ -21,10 +23,12 @@ public class AddComplaintController {
     @FXML private Button submitButton;
 
     private final ComplaintService complaintService = new ComplaintService();
-    @SuppressWarnings("unused")
     private final OwnerService ownerService = new OwnerService();
 
     private Long ownerId; // resolved from tenant.getOwner()
+
+    // Map UI category labels -> backend category IDs (replace with real IDs if different)
+    private final Map<String, Long> categoryIds = new HashMap<>();
 
     @FXML
     public void initialize() {
@@ -40,13 +44,20 @@ public class AddComplaintController {
                             : "Owner #" + ownerId;
             ownerNameLabel.setText(display);
         } else {
-            // No owner info on the DTO; keep label but prevent submit
             ownerId = null;
             ownerNameLabel.setText("Unknown Owner");
         }
 
+        // Populate UI choices
         categoryField.getItems().setAll("Maintenance", "Billing Issue", "Noise Complaint", "Security", "Other");
         priorityField.getItems().setAll("Low", "Medium", "High");
+
+        // Category -> ID mapping (ensure these match your backend)
+        categoryIds.put("Maintenance", 1L);
+        categoryIds.put("Billing Issue", 2L);
+        categoryIds.put("Noise Complaint", 3L);
+        categoryIds.put("Security", 4L);
+        categoryIds.put("Other", 5L);
     }
 
     @FXML
@@ -73,13 +84,28 @@ public class AddComplaintController {
                 return;
             }
 
-            ComplaintDTO complaint = new ComplaintDTO();
-            complaint.setTitle(category);
-            complaint.setDescription(description);
-            complaint.setStatus("Pending");
-            complaint.setOwnerId(ownerId); // use mapped owner
+            Long tenantId = currentTenant.getTenantId();
+            Long categoryId = categoryIds.get(category);
+            if (categoryId == null) {
+                showAlert(Alert.AlertType.ERROR, "Unknown Category",
+                        "Selected category isn’t recognized. Please pick a valid category.");
+                return;
+            }
 
-            complaintService.addComplaint(currentTenant.getTenantId(), complaint);
+            // Normalize to enum-style names if backend expects them
+            String priorityValue = priority.toUpperCase(); // "LOW"/"MEDIUM"/"HIGH"
+
+            // Use category text as a simple title; change if you add a dedicated title field
+            String title = category;
+
+            // Call existing service signature: (Long, String, String, Long, String)
+            complaintService.addComplaint(
+                tenantId,
+                title,
+                description,
+                categoryId,
+                priorityValue
+            );
 
             showAlert(Alert.AlertType.INFORMATION, "Complaint Submitted",
                     "Your complaint has been recorded successfully.");
@@ -98,7 +124,9 @@ public class AddComplaintController {
 
     private void closeForm() {
         Stage stage = (Stage) submitButton.getScene().getWindow();
-        stage.close();
+        if (stage != null) {
+            stage.close();
+        }
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {

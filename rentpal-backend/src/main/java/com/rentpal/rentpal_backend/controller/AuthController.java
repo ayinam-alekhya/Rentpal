@@ -1,5 +1,7 @@
 package com.rentpal.rentpal_backend.controller;
 
+import com.rentpal.rentpal_backend.dto.AuthOwnerDTO;
+import com.rentpal.rentpal_backend.dto.AuthTenantDTO;
 import com.rentpal.rentpal_backend.dto.UserLoginDTO;
 import com.rentpal.rentpal_backend.dto.UserRegistrationDTO;
 import com.rentpal.rentpal_backend.model.Owner;
@@ -51,44 +53,50 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody UserLoginDTO loginDTO) {
-        String email = loginDTO.getEmail();
-        String password = loginDTO.getPassword();
-        String role = loginDTO.getRole();
-        
-        try {
-            if ("owner".equalsIgnoreCase(role)) {
-                Owner owner = authService.authenticateOwner(email, password);
-                if (owner != null) {
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("success", true);
-                    response.put("userType", "owner");
-                    response.put("user", owner);
-                    return ResponseEntity.ok(response);
-                }
-            } else if ("tenant".equalsIgnoreCase(role)) {
-                Tenant tenant = authService.authenticateTenant(email, password);
-                if (tenant != null) {
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("success", true);
-                    response.put("userType", "tenant");
-                    response.put("user", tenant);
-                    return ResponseEntity.ok(response);
-                }
+ @PostMapping("/login")
+public ResponseEntity<Map<String, Object>> login(@RequestBody UserLoginDTO loginDTO) {
+    String email = loginDTO.getEmail();
+    String password = loginDTO.getPassword();
+    String role = loginDTO.getRole();
+
+    try {
+        Map<String, Object> ok = new HashMap<>();
+        ok.put("success", true);
+
+        if ("owner".equalsIgnoreCase(role)) {
+            Owner o = authService.authenticateOwner(email, password);
+            if (o != null) {
+                var dto = new AuthOwnerDTO(
+                    o.getOwnerId(), o.getName(), o.getEmail(), o.getPhone(), o.getAddress()
+                );
+                ok.put("userType", "owner");
+                ok.put("user", dto);
+                return ResponseEntity.ok(ok);
             }
-            
-            // If authentication failed
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Invalid email, password, or role");
-            return ResponseEntity.status(401).body(response);
-            
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Authentication failed: " + e.getMessage());
-            return ResponseEntity.status(500).body(response);
+        } else if ("tenant".equalsIgnoreCase(role)) {
+            Tenant t = authService.authenticateTenant(email, password);
+            if (t != null) {
+                var dto = new AuthTenantDTO(
+                    t.getTenantId(), t.getName(), t.getEmail(), t.getRoomNumber(),
+                    t.getOwner() != null ? t.getOwner().getOwnerId() : null
+                );
+                ok.put("userType", "tenant");
+                ok.put("user", dto);
+                return ResponseEntity.ok(ok);
+            }
         }
+
+        Map<String, Object> fail = new HashMap<>();
+        fail.put("success", false);
+        fail.put("message", "Invalid email, password, or role");
+        return ResponseEntity.status(401).body(fail);
+
+    } catch (Exception e) {
+        Map<String, Object> err = new HashMap<>();
+        err.put("success", false);
+        err.put("message", "Authentication failed: " + e.getMessage());
+        return ResponseEntity.status(500).body(err);
     }
+}
+
 }
