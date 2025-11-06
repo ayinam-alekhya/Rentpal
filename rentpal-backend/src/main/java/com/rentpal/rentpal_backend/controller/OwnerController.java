@@ -2,6 +2,7 @@ package com.rentpal.rentpal_backend.controller;
 
 import com.rentpal.rentpal_backend.dto.CreateOwnerRequest;
 import com.rentpal.rentpal_backend.dto.OwnerSummaryDTO;
+import com.rentpal.rentpal_backend.dto.UpdateOwnerRequest;
 import com.rentpal.rentpal_backend.model.Owner;
 import com.rentpal.rentpal_backend.service.OwnerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +44,13 @@ public class OwnerController {
 
     // ✅ Update owner
     @PutMapping("/{id}")
-    public Owner updateOwner(@PathVariable Long id, @RequestBody Owner updatedOwner) {
+    public Owner updateOwner(@PathVariable Long id, @RequestBody UpdateOwnerRequest request) {
+        Owner updatedOwner = new Owner();
+        updatedOwner.setName(request.getName());
+        updatedOwner.setEmail(request.getEmail());
+        updatedOwner.setPhone(request.getPhone());
+        updatedOwner.setAddress(request.getAddress());
+
         return ownerService.updateOwner(id, updatedOwner);
     }
 

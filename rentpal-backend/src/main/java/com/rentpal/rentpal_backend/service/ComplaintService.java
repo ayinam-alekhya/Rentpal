@@ -31,20 +31,24 @@ public class ComplaintService {
     private OwnerRepository ownerRepository;
 
     // ✅ 1. Add new complaint (original method)
-    public Complaint addComplaint(Long tenantId, Complaint complaint) {
+    public Complaint addComplaint(Long tenantId, ComplaintDTO dto) {
         Tenant tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid tenant ID: " + tenantId));
+                .orElseThrow(() -> new RuntimeException("Tenant not found"));
 
-        // Optional: auto-fetch owner from tenant if needed
-        Owner owner = tenant.getOwner();
+        Owner owner = ownerRepository.findById(dto.getOwnerId())
+                .orElseThrow(() -> new RuntimeException("Owner not found"));
 
+        Complaint complaint = new Complaint();
+        complaint.setTitle(dto.getTitle());
+        complaint.setDescription(dto.getDescription());
+        complaint.setStatus("PENDING");
+        complaint.setPriority(dto.getPriority());
         complaint.setTenant(tenant);
         complaint.setOwner(owner);
-        complaint.setDateSubmitted(LocalDateTime.now());
-        complaint.setStatus("Pending");
 
         return complaintRepository.save(complaint);
     }
+
 
     // ✅ 1b. Add new complaint (new method for DTO)
     public Complaint addComplaint(Long tenantId, CreateComplaintRequest complaintRequest) {
@@ -68,6 +72,7 @@ public class ComplaintService {
         complaint.setTenant(tenant);
         complaint.setOwner(owner);
         complaint.setStatus(complaintRequest.getStatus() != null ? complaintRequest.getStatus() : "Pending");
+        complaint.setPriority(complaintRequest.getPriority());
         
         // Convert string date to LocalDateTime if provided, otherwise use current time
         if (complaintRequest.getDateSubmitted() != null && !complaintRequest.getDateSubmitted().isEmpty()) {
@@ -98,29 +103,36 @@ public class ComplaintService {
                 .collect(Collectors.toList());
     }
 
-    // ✅ 3. Get complaints by Owner ID
-    public List<ComplaintDTO> getComplaintsByOwner(Long ownerId) {
-        return complaintRepository.findByOwner_OwnerId(ownerId).stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-    }
-
-    // ✅ 4. Get complaints by Tenant ID
-    public List<ComplaintDTO> getComplaintsByTenant(Long tenantId) {
-        return complaintRepository.findByTenant_TenantId(tenantId).stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-    }
-
-    // ✅ 5. Update complaint status
-    public Complaint updateComplaintStatus(Long complaintId, String newStatus) {
-        Complaint complaint = complaintRepository.findById(complaintId).orElse(null);
-        if (complaint != null) {
-            complaint.setStatus(newStatus);
-            return complaintRepository.save(complaint);
+    // ✅ 3. Get complaints by Owner ID (optionally filtered by status)
+    public List<ComplaintDTO> getComplaintsByOwner(Long ownerId, String status) {
+        List<Complaint> list;
+        if (status == null || status.equalsIgnoreCase("ALL")) {
+            list = complaintRepository.findByOwner_OwnerId(ownerId);
+        } else {
+            list = complaintRepository.findByOwner_OwnerIdAndStatusIgnoreCase(ownerId, status);
         }
-        return null;
+        return list.stream().map(this::toDTO).collect(Collectors.toList());
     }
+
+    // ✅ 4. Get complaints by Tenant ID (optionally filtered by status)
+    public List<ComplaintDTO> getComplaintsByTenant(Long tenantId, String status) {
+        List<Complaint> list;
+        if (status == null || status.equalsIgnoreCase("ALL")) {
+            list = complaintRepository.findByTenant_TenantId(tenantId);
+        } else {
+            list = complaintRepository.findByTenant_TenantIdAndStatusIgnoreCase(tenantId, status);
+        }
+        return list.stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    // ✅ 5. Update complaint status (owner-only from UI)
+    public Complaint updateComplaintStatus(Long complaintId, String newStatus) {
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new IllegalArgumentException("Complaint not found: " + complaintId));
+        complaint.setStatus(newStatus);
+        return complaintRepository.save(complaint);
+    }
+
 
     // ✅ 6. Convert to DTO helper
     private ComplaintDTO toDTO(Complaint complaint) {

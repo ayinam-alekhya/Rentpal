@@ -7,11 +7,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.*;          // TableView, TableColumn, Button, Label, ComboBox, etc.
-import javafx.stage.Modality;
-import javafx.stage.Stage;
+import javafx.scene.control.*;
+import com.rentpal.controllers.payments.AddPaymentController;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -38,52 +35,72 @@ public class PaymentsController {
 
     private ObservableList<Payment> paymentData;
     private PaymentService paymentService = new PaymentService();
+    private final ObservableList<Payment> allPayments     = FXCollections.observableArrayList();
+    private final ObservableList<Payment> filteredPayments = FXCollections.observableArrayList();
+
 
     @FXML
     public void initialize() {
-        // Dropdown filter
-        filterComboBox.setItems(FXCollections.observableArrayList("All", "Paid", "Pending", "Overdue"));
+       filterComboBox.setItems(FXCollections.observableArrayList("ALL", "PAID", "PENDING", "OVERDUE"));
 
-        // Table column mappings
-        colDate.setCellValueFactory(cellData -> cellData.getValue().dateProperty());
-        colTenant.setCellValueFactory(cellData -> cellData.getValue().tenantProperty());
-        colAmount.setCellValueFactory(cellData -> cellData.getValue().amountProperty());
-        colStatus.setCellValueFactory(cellData -> cellData.getValue().statusProperty());
-        colMethod.setCellValueFactory(cellData -> cellData.getValue().methodProperty());
+        colDate.setCellValueFactory(c -> c.getValue().dateProperty());
+        colTenant.setCellValueFactory(c -> c.getValue().tenantProperty());
+        colAmount.setCellValueFactory(c -> c.getValue().amountProperty());
+        colStatus.setCellValueFactory(c -> c.getValue().statusProperty());
+        colMethod.setCellValueFactory(c -> c.getValue().methodProperty());
 
-        // Load payments from backend
-        loadPaymentsFromBackend();
+        paymentsTable.setItems(filteredPayments);
 
-        // Initialize quick stats
+        // listeners
+        filterComboBox.getSelectionModel().select("ALL");
+        filterComboBox.valueProperty().addListener((o, ov, nv) -> applyPaymentsFilter());
+        searchField.textProperty().addListener((o, ov, nv) -> applyPaymentsFilter());
+
+        loadPaymentsFromBackend();  // fills allPayments then apply filter
         updateStats();
     }
 
     private void loadPaymentsFromBackend() {
         try {
             List<PaymentDTO> paymentDTOs = paymentService.getAllPayments();
-            paymentData = FXCollections.observableArrayList();
-            
-            for (PaymentDTO paymentDTO : paymentDTOs) {
-                // Format the date for display
-                String displayDate = formatPaymentDate(paymentDTO.getPaymentDate());
-                
-                Payment payment = new Payment(
-                    displayDate,
-                    "Tenant " + (paymentDTO.getPaymentId() != null ? paymentDTO.getPaymentId() : "N/A"), // Placeholder for tenant name
-                    0L, // Placeholder for tenant ID - we'll need to get this from the backend
-                    paymentDTO.getAmount(),
-                    paymentDTO.getStatus(),
-                    paymentDTO.getModeOfPayment()
-                );
-                paymentData.add(payment);
+            allPayments.clear();
+            for (PaymentDTO dto : paymentDTOs) {
+                String displayDate = formatPaymentDate(dto.getPaymentDate()); // keep your formatter
+                allPayments.add(new Payment(
+                        displayDate,
+                        // TODO: replace placeholder with real tenant name if your API returns it
+                        "Tenant " + (dto.getPaymentId() != null ? dto.getPaymentId() : "N/A"),
+                        0L,
+                        dto.getAmount(),
+                        normalize(dto.getStatus()),
+                        dto.getModeOfPayment()
+                ));
             }
-            
-            paymentsTable.setItems(paymentData);
+            applyPaymentsFilter();   // <- refresh table based on current dropdown + search
             updateStats();
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to load payments: " + e.getMessage());
         }
+    }
+    private void applyPaymentsFilter() {
+        String wanted = normalize(filterComboBox.getValue()); // "ALL"/"PAID"/"PENDING"/"OVERDUE"
+        String q = (searchField.getText() == null) ? "" : searchField.getText().trim().toLowerCase();
+
+        filteredPayments.setAll(
+            allPayments.stream()
+                .filter(p -> "ALL".equals(wanted) || normalize(p.getStatus()).equals(wanted))
+                .filter(p -> q.isEmpty()
+                        || (p.getTenant() != null && p.getTenant().toLowerCase().contains(q))
+                        || String.valueOf(p.getAmount()).contains(q)
+                        || (p.getMethod() != null && p.getMethod().toLowerCase().contains(q))
+                        || (p.getDate() != null && p.getDate().toLowerCase().contains(q)))
+                .toList()
+        );
+    }
+
+    private String normalize(String s) {
+        return (s == null) ? "" : s.trim().toUpperCase();
     }
 
     private String formatPaymentDate(String dateStr) {
@@ -101,68 +118,56 @@ public class PaymentsController {
     }
 
     // ✅ Add Payment Popup
-    @FXML
+   @FXML
     private void handleAddPayment() {
         try {
-            // Open the Add Payment FORM (with the tenant dropdown)
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/com/rentpal/fxml/add_payment_dialog.fxml")); 
-            Parent root = loader.load();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/rentpal/fxml/add_payment_dialog.fxml"));
+            DialogPane dialogPane = loader.load();
+            dialogPane.getStylesheets().add(getClass().getResource("/css/dialog.css").toExternalForm());
 
             AddPaymentController controller = loader.getController();
 
-            // Optional: if you want to preselect a tenant based on the selected row
-            Payment selected = paymentsTable.getSelectionModel().getSelectedItem();
-            if (selected != null && selected.getTenantId() != null && selected.getTenantId() > 0) {
-                controller.setTenantInfo(selected.getTenant(), selected.getTenantId());
+            // OPTIONAL: preselect if a row is highlighted (define preselectTenant in the dialog controller)
+            Payment sel = paymentsTable.getSelectionModel().getSelectedItem();
+            if (sel != null && sel.getTenantId() != null && sel.getTenantId() > 0) {
+                controller.preselectTenant(sel.getTenantId(), sel.getTenant());
             }
-            // If nothing is selected, the form will show the ComboBox for owner to choose
 
-            // Show as a modal dialog (no TextInputDialog)
-            Stage stage = new Stage();
-            stage.setTitle("+ Add Payment");
-            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
-            stage.setResizable(false);
-            stage.setScene(new javafx.scene.Scene(root));
-            stage.showAndWait();
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setDialogPane(dialogPane);
+            dialog.setTitle("Add New Payment");
+            dialog.showAndWait();
 
-            // If a payment was created, refresh table & stats
             Payment newPayment = controller.getNewPayment();
             if (newPayment != null) {
-                // Either append or just reload from backend:
-                // paymentsTable.getItems().add(newPayment);
-                loadPaymentsFromBackend(); // keeps things in sync with backend
+                allPayments.add(newPayment);  // add to SOURCE
+                applyPaymentsFilter();        // re-filter into the table
                 updateStats();
             }
+
+            // If you must refetch from server, do this instead of the two lines above:
+            // loadPaymentsFromBackend();
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Failed to open Add Payment: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Error", "Failed to load Add Payment dialog: " + e.getMessage());
         }
     }
 
-
     private void updateStats() {
-        if (paymentsTable.getItems() == null) {
-            return;
-        }
-        
-        double total = paymentsTable.getItems().stream()
-                .filter(p -> p.getStatus() != null && (p.getStatus().equals("Paid") || p.getStatus().equals("Full")))
+        var items = filteredPayments.isEmpty() ? allPayments : filteredPayments;
+
+        double total = items.stream()
+                .filter(p -> "PAID".equals(normalize(p.getStatus())) || "FULL".equals(normalize(p.getStatus())))
                 .mapToDouble(Payment::getAmount)
                 .sum();
         totalCollected.setText("$" + String.format("%.2f", total));
 
-        long pending = paymentsTable.getItems().stream()
-                .filter(p -> p.getStatus() != null && p.getStatus().equals("Pending"))
-                .count();
+        long pending = items.stream().filter(p -> "PENDING".equals(normalize(p.getStatus()))).count();
         pendingPayments.setText(String.valueOf(pending));
 
-        long overdue = paymentsTable.getItems().stream()
-                .filter(p -> p.getStatus() != null && p.getStatus().equals("Overdue"))
-                .count();
+        long overdue = items.stream().filter(p -> "OVERDUE".equals(normalize(p.getStatus()))).count();
         overduePayments.setText(String.valueOf(overdue));
-        
-        // Set refunded to 0 for now, as we don't have refunded status in the current data model
+
         refundedPayments.setText("0");
     }
     

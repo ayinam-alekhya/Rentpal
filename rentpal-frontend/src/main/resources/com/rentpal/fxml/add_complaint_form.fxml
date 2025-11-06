@@ -28,10 +28,9 @@
                 <ColumnConstraints halignment="LEFT" prefWidth="300"/>
             </columnConstraints>
 
-            <!-- Owner Name (auto-filled for tenants) -->
+            <!-- Owner Selection (visible for tenants) -->
             <Label fx:id="ownerSelectionLabel" text="Owner:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-            <Label fx:id="ownerNameLabel" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="readonly-field"/>
-
+            <Label fx:id="ownerNameLabel" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
 
             <Label text="Category:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>

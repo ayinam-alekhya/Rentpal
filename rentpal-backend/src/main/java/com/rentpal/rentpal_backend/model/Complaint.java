@@ -24,6 +24,8 @@ public class Complaint {
     @Column(nullable = false)
     private LocalDateTime dateSubmitted;
 
+    private String priority;
+
     // 🔗 Each complaint belongs to one tenant
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tenant_id", nullable = false)
@@ -65,6 +67,9 @@ public class Complaint {
 
     public LocalDateTime getDateSubmitted() { return dateSubmitted; }
     public void setDateSubmitted(LocalDateTime dateSubmitted) { this.dateSubmitted = dateSubmitted; }
+
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
 
     public Tenant getTenant() { return tenant; }
     public void setTenant(Tenant tenant) { this.tenant = tenant; }

@@ -10,6 +10,8 @@ import javafx.scene.layout.VBox;
 import javafx.animation.TranslateTransition;
 import javafx.util.Duration;
 import java.io.IOException;
+import com.rentpal.utils.SessionManager;
+import com.rentpal.dto.OwnerDTO;
 
 import com.rentpal.controllers.tenants.TenantsController;
 import com.rentpal.utils.SceneSwitcher;
@@ -23,9 +25,18 @@ public class OwnerDashboardController {
     private VBox sidebar;
 
     private boolean sidebarCollapsed = false;
+    private Long ownerId;
+
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
+    }
 
     @FXML
     public void initialize() throws IOException {
+        OwnerDTO owner = SessionManager.getInstance().getCurrentOwner();
+        if (owner != null) {
+            this.ownerId = owner.getOwnerId();   // <-- set it here
+        }
         showDashboard(null);
     }
 
@@ -33,6 +44,7 @@ public class OwnerDashboardController {
         Parent view = FXMLLoader.load(getClass().getResource(fxml));
         contentArea.getChildren().setAll(view);
     }
+    
 
     @FXML
     private void showDashboard(ActionEvent event) throws IOException {
@@ -45,6 +57,8 @@ public class OwnerDashboardController {
         Parent view = loader.load();
         TenantsController controller = loader.getController();
         controller.setContentArea(contentArea);
+        controller.setOwnerId(ownerId);
+        controller.loadTenantsForOwner();
         contentArea.getChildren().setAll(view);
     }
 

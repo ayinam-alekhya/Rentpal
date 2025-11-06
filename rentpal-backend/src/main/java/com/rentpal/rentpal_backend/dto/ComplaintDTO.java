@@ -10,6 +10,8 @@ public class ComplaintDTO {
     private LocalDateTime dateSubmitted;
     private String tenantName;
     private String ownerName;
+    private String priority;  
+    private Long ownerId;
 
     public ComplaintDTO(Long complaintId, String title, String description,
                         String status, LocalDateTime dateSubmitted,
@@ -31,4 +33,18 @@ public class ComplaintDTO {
     public LocalDateTime getDateSubmitted() { return dateSubmitted; }
     public String getTenantName() { return tenantName; }
     public String getOwnerName() { return ownerName; }
+        public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+    public Long getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
+    }
 }

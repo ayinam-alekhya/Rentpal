@@ -1,48 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import java.net.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane prefHeight="600" prefWidth="980" styleClass="content-area" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.rentpal.controllers.complaints.ComplaintsController">
+<BorderPane prefHeight="600" prefWidth="980" styleClass="content-area"
+            xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.rentpal.controllers.ownerdashboard.OwnerComplaintsController">
 
     <stylesheets>
-        <URL value="@/css/theme.css" />
-        <URL value="@/css/dashboard.css" />
+        <URL value="@/css/theme.css"/>
+        <URL value="@/css/dashboard.css"/>
     </stylesheets>
 
-
-    <!-- 🟦 HEADER -->
     <top>
         <HBox spacing="10" styleClass="page-header">
             <Pane HBox.hgrow="ALWAYS">
                 <children>
-                    <Label layoutY="-3.0" styleClass="page-title" text="🛠 Complaints" />
-                </children></Pane>
-
+                    <Label styleClass="page-title" text="🛠 Complaints"/>
+                </children>
+            </Pane>
         </HBox>
     </top>
 
-    <!-- 🟩 CENTER -->
     <center>
         <VBox spacing="20" styleClass="main-content">
             <HBox spacing="15" styleClass="filter-bar">
-                <TextField fx:id="searchField" promptText="Search by tenant or issue..." styleClass="search-field" />
-                <ComboBox fx:id="filterComboBox" prefWidth="160" promptText="Filter by status" />
-                <Pane HBox.hgrow="ALWAYS" />
+                <TextField fx:id="searchField" promptText="Search by tenant or issue..." styleClass="search-field"/>
+                <ComboBox fx:id="filterCombo" prefWidth="160" promptText="Filter by status"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <!-- Optional buttons (status can also be changed inline in the table) -->
+                <!-- filter combo already present; no change needed -->
+                <Button fx:id="markInProgressBtn" text="Mark In-Progress"/>
+                <Button fx:id="markResolvedBtn"   text="Mark Resolved"/>
+
             </HBox>
 
-            <!-- Complaints Table -->
-            <TableView fx:id="complaintsTable" prefHeight="420" styleClass="complaints-table">
+            <TableView fx:id="table" prefHeight="420" editable="true" styleClass="complaints-table">
                 <columns>
-                    <TableColumn fx:id="colId" prefWidth="80" text="ID" />
-                    <TableColumn fx:id="colTenant" prefWidth="200" text="Tenant" />
-                    <TableColumn fx:id="colIssue" prefWidth="300" text="Issue" />
-                    <TableColumn fx:id="colStatus" prefWidth="130" text="Status" />
-                    <TableColumn fx:id="colDate" prefWidth="160" text="Date Reported" />
+                    <TableColumn fx:id="colId"    prefWidth="80"  text="ID"/>
+                    <TableColumn fx:id="colTenant" prefWidth="200" text="Tenant"/>
+                    <TableColumn fx:id="colIssue"  prefWidth="300" text="Issue"/>
+                    <!-- Status is editable via inline ComboBox -->
+                    <TableColumn fx:id="colStatus" prefWidth="160" text="Status"/>
+                    <TableColumn fx:id="colDate"   prefWidth="180" text="Date Reported"/>
                 </columns>
             </TableView>
         </VBox>
     </center>
-
 </BorderPane>

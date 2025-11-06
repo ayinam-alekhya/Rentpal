@@ -17,7 +17,7 @@ public class Tenant {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = true, unique = false)
+    @Column(nullable = true, unique = true)
     private String email;
 
     @Column(nullable = false, length = 15)
@@ -32,10 +32,9 @@ public class Tenant {
     @Column(nullable = false)
     private String status; // e.g. "Active", "Inactive"
 
-    // ✅ Many tenants belong to one owner
-    // For signup, owner can be null initially and assigned later
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = true)
+    @JsonBackReference("owner-tenants")
     private Owner owner;
 
     // ✅ One tenant can have many payments

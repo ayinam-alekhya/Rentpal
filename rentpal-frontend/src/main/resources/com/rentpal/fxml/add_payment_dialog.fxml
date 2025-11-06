@@ -30,10 +30,6 @@
                     <ColumnConstraints halignment="LEFT" prefWidth="250"/>
                 </columnConstraints>
 
-                <!-- Tenant Field (visible for tenants) -->
-                <Label text="Tenant:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                <TextField fx:id="tenantField" promptText="Tenant Name" editable="false"
-                           GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
                 <!-- Tenant Selection (visible for owners) -->
                 <Label fx:id="tenantSelectionLabel" text="Select Tenant:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>

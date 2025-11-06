@@ -65,4 +65,13 @@ public class OwnerDTO {
     public void setTenants(List<?> tenants) {
         this.tenants = tenants;
     }
+
+    @Override
+    public String toString() {
+        // Display both name and email (you can change formatting as you like)
+        return name != null
+                ? name 
+                : "Unknown Owner";
+    }
+
 }

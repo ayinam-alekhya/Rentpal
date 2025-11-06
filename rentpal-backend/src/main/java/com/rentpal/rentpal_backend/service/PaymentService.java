@@ -115,4 +115,33 @@ public class PaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with ID: " + tenantId));
         return tenant.getPayments();
     }
+    public List<Payment> getPaymentsByTenant(Long tenantId, String status,
+                                         LocalDate from, LocalDate to) {
+
+        // Normalize range to full-day boundaries if provided
+        LocalDateTime fromDt = (from == null) ? null : from.atStartOfDay();
+        LocalDateTime toDt   = (to   == null) ? null : to.atTime(23, 59, 59);
+
+        boolean hasRange = (fromDt != null || toDt != null);
+        boolean hasStatus = (status != null && !"ALL".equalsIgnoreCase(status));
+
+        if (!hasRange && !hasStatus) {
+            return paymentRepository.findByTenant_TenantId(tenantId);
+        }
+
+        if (!hasRange) {
+            return paymentRepository.findByTenant_TenantIdAndStatus(tenantId, status);
+        }
+
+        // when only one bound is present, clip the other to extremes
+        if (fromDt == null) fromDt = LocalDateTime.of(1970, 1, 1, 0, 0);
+        if (toDt == null)   toDt   = LocalDateTime.of(2999,12,31,23,59,59);
+
+        if (!hasStatus) {
+            return paymentRepository.findByTenant_TenantIdAndPaymentDateBetween(tenantId, fromDt, toDt);
+        }
+
+        return paymentRepository.findByTenant_TenantIdAndStatusAndPaymentDateBetween(
+                tenantId, status, fromDt, toDt);
+    }
 }

@@ -25,13 +25,18 @@ public class AddTenantController {
 
     private TenantsController tenantsController; // Reference to parent controller
     private TenantService tenantService = new TenantService();
+    private Long ownerId;
+
+    public void setOwnerId(Long ownerId) {
+    this.ownerId = ownerId;
+}
 
     // 👇 This setter will be called from TenantsController
     public void setTenantsController(TenantsController controller) {
         this.tenantsController = controller;
     }
 
-    @FXML
+   @FXML
     private void handleAddTenant() {
         String name = tenantNameField.getText();
         String email = tenantEmailField.getText();
@@ -45,6 +50,11 @@ public class AddTenantController {
             return;
         }
 
+        if (ownerId == null) {
+            new Alert(Alert.AlertType.ERROR, "Owner context missing (ownerId is null).").showAndWait();
+            return;
+        }
+
         double rent;
         try {
             rent = Double.parseDouble(rentText);
@@ -53,55 +63,37 @@ public class AddTenantController {
             return;
         }
 
-        // Create a new TenantDTO object
-        TenantDTO tenantDTO = new TenantDTO();
-        tenantDTO.setName(name);
-        tenantDTO.setEmail(email);
-        tenantDTO.setPhone(contact);
-        tenantDTO.setRoomNumber(unit);
-        tenantDTO.setRentAmount(rent);
-        tenantDTO.setStatus(status);
-        tenantDTO.setRemainingRent(0.0);
-        tenantDTO.setPaymentStatus("Unpaid");
-
-        // Set the owner information from the session
-        if (SessionManager.getInstance().isOwner() && SessionManager.getInstance().getCurrentOwner() != null) {
-            tenantDTO.setOwner(SessionManager.getInstance().getCurrentOwner());
-        } else {
-            new Alert(Alert.AlertType.ERROR, "Owner information not found!").showAndWait();
-            return;
-        }
-
         try {
-            // Call backend API to create tenant
-            TenantDTO createdTenant = tenantService.createTenant(tenantDTO);
-            
-            // Create a new Tenant object for the frontend
-            Tenant newTenant = new Tenant();
-            newTenant.setName(createdTenant.getName());
-            newTenant.setEmail(createdTenant.getEmail());
-            newTenant.setContact(createdTenant.getPhone());
-            newTenant.setUnit(createdTenant.getRoomNumber());
-            newTenant.setRent(createdTenant.getRentAmount());
-            newTenant.setStatus(createdTenant.getStatus());
+            // Build request that backend expects
+            com.rentpal.dto.CreateTenantRequest req = new com.rentpal.dto.CreateTenantRequest();
+            req.setName(name);
+            req.setEmail(email);
+            req.setPhone(contact);
+            req.setRoomNumber(unit);
+            req.setRentAmount(rent);
+            req.setOwnerId(ownerId); // <-- critical
 
-            // Add to parent table (if controller is connected)
+            // POST
+            TenantDTO created = tenantService.createTenant(req);
+
+            // optional: you can ignore 'status' here if backend sets paymentStatus/remainingRent defaults
+            new Alert(Alert.AlertType.INFORMATION, "Tenant added successfully!").showAndWait();
+
+            // Ask parent to refresh its owner-scoped table
             if (tenantsController != null) {
-                tenantsController.addTenantToTable(newTenant);
+                tenantsController.loadTenantsForOwner();
             }
 
-            // Show success message
-            new Alert(Alert.AlertType.INFORMATION, "Tenant added successfully!").showAndWait();
+            // Close dialog
+            Stage stage = (Stage) tenantNameField.getScene().getWindow();
+            stage.close();
+
         } catch (Exception e) {
             e.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "Failed to add tenant: " + e.getMessage()).showAndWait();
-            return;
         }
-
-        // Close the popup
-        Stage stage = (Stage) tenantNameField.getScene().getWindow();
-        stage.close();
     }
+
 
     @FXML
     private void handleCancel() {

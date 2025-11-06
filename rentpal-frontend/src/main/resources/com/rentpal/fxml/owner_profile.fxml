@@ -69,12 +69,12 @@
                 </HBox>
 
                 <!-- Bottom quick links -->
-                <HBox layoutX="40" layoutY="520" spacing="12">
+                <!-- <HBox layoutX="40" layoutY="520" spacing="12">
                     <children>
                         <Button text="View My Properties" onAction="#handleViewProperties" styleClass="add-btn"/>
                         <Button text="View Complaints" onAction="#handleViewComplaints" styleClass="add-btn"/>
                     </children>
-                </HBox>
+                </HBox> -->
 
             </children>
         </AnchorPane>

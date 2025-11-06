@@ -35,7 +35,7 @@
                     <TableColumn fx:id="colId" prefWidth="150" text="Complaint ID" />
                     <TableColumn fx:id="colCategory" prefWidth="250" text="Title" />
                     <TableColumn fx:id="colDescription" prefWidth="400" text="Description" />
-                    <TableColumn fx:id="colStatus"      prefWidth="160" text="Status"/>
+                    <TableColumn fx:id="colStatus" prefWidth="150" text="Status"/>
                 </columns>
             </TableView>
         </VBox>

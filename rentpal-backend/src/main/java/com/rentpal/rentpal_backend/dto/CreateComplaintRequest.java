@@ -5,6 +5,7 @@ public class CreateComplaintRequest {
     private String description;
     private String dateSubmitted; // String representation to match frontend
     private String status;
+    private String priority;
     private Long ownerId; // Added ownerId field to match frontend
 
     // Default constructor
@@ -51,4 +52,6 @@ public class CreateComplaintRequest {
     public void setOwnerId(Long ownerId) {
         this.ownerId = ownerId;
     }
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
 }

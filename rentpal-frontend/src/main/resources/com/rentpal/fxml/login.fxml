@@ -1,41 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import java.net.URL?>
 
+
+<?import java.net.URL?>
 <StackPane xmlns="http://javafx.com/javafx/21"
            xmlns:fx="http://javafx.com/fxml"
            fx:controller="com.rentpal.controllers.auth.LoginController"
            prefWidth="800" prefHeight="600">
-
     <stylesheets>
         <URL value="@/css/login.css" />
     </stylesheets>
 
-    <!-- Define non-Node objects (like ToggleGroup) here -->
-    <fx:define>
-        <ToggleGroup fx:id="roleGroup"/>
-    </fx:define>
 
     <VBox fx:id="loginBox"
           alignment="CENTER"
           spacing="20"
           maxWidth="420"
           maxHeight="400">
-
         <Label text="Login" styleClass="label-title"/>
-
-        <HBox spacing="16">
-            <RadioButton fx:id="ownerRadio" text="Owner" toggleGroup="$roleGroup" selected="true"/>
-            <RadioButton fx:id="tenantRadio" text="Tenant" toggleGroup="$roleGroup"/>
-        </HBox>
 
         <TextField fx:id="emailField" promptText="Email"/>
         <PasswordField fx:id="passwordField" promptText="Password"/>
 
         <Button text="Login" onAction="#handleLogin"/>
-
         <Hyperlink text="Forgot Password?" onAction="#handleForgotPassword"
                    style="-fx-text-fill: #3A86FF;"/>
 
@@ -45,4 +35,5 @@
                    style="-fx-text-fill: #3A86FF;"/>
 
     </VBox>
+
 </StackPane>

@@ -9,7 +9,7 @@ public class UserRegistrationDTO {
     private String address;
     private String roomNumber;
     private Double rentAmount;
-    private Long ownerId;
+     private Long ownerId;
 
     // Constructors
     public UserRegistrationDTO() {}
@@ -85,4 +85,12 @@ public class UserRegistrationDTO {
     public void setRentAmount(Double rentAmount) {
         this.rentAmount = rentAmount;
     }
+    public Long getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
+    }
+
 }

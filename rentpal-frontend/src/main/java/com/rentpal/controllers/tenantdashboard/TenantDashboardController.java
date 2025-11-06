@@ -1,6 +1,7 @@
 package com.rentpal.controllers.tenantdashboard;
 
 import com.rentpal.controllers.dashboard.TenantProfileController;
+import com.rentpal.dto.TenantDTO;
 import com.rentpal.utils.SceneSwitcher;
 import com.rentpal.utils.SessionManager;
 import javafx.event.ActionEvent;
@@ -129,7 +130,15 @@ public class TenantDashboardController {
             Parent view = loader.load();
 
             TenantProfileController ctrl = loader.getController();
-            ctrl.loadTenant(null, true, false); // tenant editing own profile
+
+            // Use the logged-in tenant DTO from session
+            TenantDTO current = SessionManager.getInstance().getCurrentTenant();
+            if (current != null) {
+                ctrl.loadTenant(current, true, false);   // ✅ no ambiguity
+            } else {
+                // Fallback if session is empty
+                ctrl.loadTenant(new TenantDTO(), true, false);
+            }
 
             contentArea.getChildren().setAll(view);
         } catch (Exception e) {
@@ -200,7 +209,7 @@ public class TenantDashboardController {
                     TenantComplaintsController complaintsController = loader.getController();
                     if (complaintsController != null) {
                         System.out.println("Calling loadComplaintData for complaints page");
-                        complaintsController.loadComplaintData();
+                        complaintsController.reloadFromServer();
                     } else {
                         System.out.println("Complaints controller is null");
                     }

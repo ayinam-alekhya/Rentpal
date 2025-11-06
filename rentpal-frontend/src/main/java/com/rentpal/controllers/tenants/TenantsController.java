@@ -2,8 +2,10 @@ package com.rentpal.controllers.tenants;
 
 import com.rentpal.controllers.dashboard.TenantProfileController;
 import com.rentpal.dto.TenantDTO;
+import com.rentpal.dto.TenantSummaryDTO;
 import com.rentpal.service.TenantService;
 import javafx.animation.FadeTransition;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -17,61 +19,50 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
 import java.io.IOException;
 import java.util.List;
 
 public class TenantsController {
 
-    @FXML
-    private TableView<Tenant> tenantsTable;
+    @FXML private TableView<TenantSummaryDTO> tenantsTable;
+    @FXML private TableColumn<TenantSummaryDTO, String> nameColumn;
+    @FXML private TableColumn<TenantSummaryDTO, String> unitColumn;
+    @FXML private TableColumn<TenantSummaryDTO, String> contactColumn;   
+    @FXML private TableColumn<TenantSummaryDTO, String> statusColumn;    // maps to paymentStatus
 
-    @FXML
-    private TableColumn<Tenant, String> nameColumn;
-    @FXML
-    private TableColumn<Tenant, String> unitColumn;
-    @FXML
-    private TableColumn<Tenant, String> contactColumn;
-    @FXML
-    private TableColumn<Tenant, String> statusColumn;
+    private final TenantService tenantService = new TenantService();
+    private final ObservableList<TenantSummaryDTO> tenantList = FXCollections.observableArrayList();
 
     private StackPane contentArea;
-    private TenantService tenantService = new TenantService();
-    private ObservableList<Tenant> tenantList = FXCollections.observableArrayList();
+    private Long ownerId;
 
-    public void setContentArea(StackPane contentArea) {
-        this.contentArea = contentArea;
-    }
+    public void setOwnerId(Long ownerId) { this.ownerId = ownerId; }
+    public void setContentArea(StackPane contentArea) { this.contentArea = contentArea; }
 
     @FXML
     public void initialize() {
+        // Match DTO properties exactly
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
-        unitColumn.setCellValueFactory(new PropertyValueFactory<>("unit"));
-        contactColumn.setCellValueFactory(new PropertyValueFactory<>("contact"));
-        statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
-
-        // Load tenants from backend
-        loadTenantsFromBackend();
+        unitColumn.setCellValueFactory(new PropertyValueFactory<>("roomNumber"));
+        // No contact in summary DTO → show blank (or remainingRent if you want)
+        contactColumn.setCellValueFactory(new PropertyValueFactory<>("contact")); 
+        // Show paymentStatus in the "Status" column
+        statusColumn.setCellValueFactory(new PropertyValueFactory<>("paymentStatus"));
 
         tenantsTable.setItems(tenantList);
         tenantsTable.setOnMouseClicked(this::handleRowDoubleClick);
     }
 
-    private void loadTenantsFromBackend() {
+    /** Called by OwnerDashboardController after setOwnerId(...) */
+    public void loadTenantsForOwner() {
         try {
-            List<TenantDTO> tenantDTOs = tenantService.getAllTenants();
-            tenantList.clear();
-            
-            for (TenantDTO tenantDTO : tenantDTOs) {
-                Tenant tenant = new Tenant(
-                    tenantDTO.getTenantId(), // Include tenant ID
-                    tenantDTO.getName(),
-                    tenantDTO.getRoomNumber(),
-                    tenantDTO.getPhone(),
-                    tenantDTO.getRentAmount(),
-                    tenantDTO.getStatus()
-                );
-                tenantList.add(tenant);
+            if (ownerId == null) {
+                System.err.println("[TenantsController] ownerId is null; not loading.");
+                return;
             }
+            List<TenantSummaryDTO> rows = tenantService.getTenantsByOwner(ownerId);
+            tenantList.setAll(rows);
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to load tenants: " + e.getMessage());
@@ -80,23 +71,46 @@ public class TenantsController {
 
     private void handleRowDoubleClick(MouseEvent event) {
         if (event.getClickCount() == 2 && tenantsTable.getSelectionModel().getSelectedItem() != null) {
-            Tenant selectedTenant = tenantsTable.getSelectionModel().getSelectedItem();
-
+            TenantSummaryDTO summary = tenantsTable.getSelectionModel().getSelectedItem();
             try {
+                // Fetch full tenant for profile view
+                TenantDTO fullTenant = tenantService.getTenantById(summary.getTenantId());
+
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/rentpal/fxml/tenant_profile.fxml"));
                 Parent view = loader.load();
-
                 TenantProfileController controller = loader.getController();
-                controller.loadTenant(selectedTenant, false, true);
+                controller.loadTenant(fullTenant, /*editable*/ false, /*ownerView*/ true);
 
                 if (contentArea != null) {
                     contentArea.getChildren().setAll(view);
                     playFadeIn(view);
                 }
-
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
+                showAlert(Alert.AlertType.ERROR, "Error", "Failed to open tenant profile: " + e.getMessage());
             }
+        }
+    }
+
+    @FXML
+    private void handleAddTenant() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/rentpal/fxml/add_tenant.fxml"));
+            Parent root = loader.load();
+
+            AddTenantController controller = loader.getController();
+            // make sure your AddTenantController has setOwnerId(...) and uses it when posting
+            controller.setOwnerId(ownerId);
+
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Add Tenant");
+            stage.showAndWait();
+
+            // Refresh owner-scoped list after dialog closes
+            loadTenantsForOwner();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -107,42 +121,6 @@ public class TenantsController {
         fade.play();
     }
 
-    @FXML
-    private void handleAddTenant() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/rentpal/fxml/add_tenant.fxml"));
-            Parent root = loader.load();
-
-            AddTenantController controller = loader.getController();
-            controller.setTenantsController(this);
-
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Add Tenant");
-            stage.showAndWait();
-            
-            // Refresh the tenant list after adding a new tenant
-            loadTenantsFromBackend();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Method called by AddTenantController to add a new tenant to the table
-    public void addTenantToTable(Tenant tenant) {
-        if (tenantsTable != null && tenant != null) {
-            tenantList.add(tenant);
-        } else {
-            System.err.println("❌ Cannot add tenant: Table or tenant is null");
-        }
-    }
-    
-    // Method to refresh tenant data from backend
-    public void refreshTenants() {
-        loadTenantsFromBackend();
-    }
-
-    // ✅ Utility method for showing alerts
     private void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);

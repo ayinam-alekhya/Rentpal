@@ -1,120 +1,147 @@
 package com.rentpal.controllers.tenantdashboard;
 
+import com.rentpal.dto.ComplaintDTO;
 import com.rentpal.dto.OwnerDTO;
 import com.rentpal.dto.TenantDTO;
 import com.rentpal.service.ComplaintService;
 import com.rentpal.service.OwnerService;
 import com.rentpal.utils.SessionManager;
+import com.rentpal.service.TenantService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class AddComplaintController {
 
-    @FXML private Label ownerSelectionLabel;
-    @FXML private Label ownerNameLabel;
+    @FXML
+    private Label ownerNameLabel;
+    private Long selectedOwnerId;
 
-    @FXML private ComboBox<String> categoryField;
-    @FXML private ComboBox<String> priorityField;
-    @FXML private TextArea descriptionField;
-    @FXML private Button submitButton;
+    @FXML
+    private ComboBox<String> categoryField;
 
-    private final ComplaintService complaintService = new ComplaintService();
-    private final OwnerService ownerService = new OwnerService();
+    @FXML
+    private ComboBox<String> priorityField;
 
-    private Long ownerId; // resolved from tenant.getOwner()
+    @FXML
+    private TextArea descriptionField;
 
-    // Map UI category labels -> backend category IDs (replace with real IDs if different)
-    private final Map<String, Long> categoryIds = new HashMap<>();
+    @FXML
+    private Button submitButton;
+
+    private ComplaintService complaintService = new ComplaintService();
+    private OwnerService ownerService = new OwnerService(); // New owner service
+    private TenantService tenantService = new TenantService();
 
     @FXML
     public void initialize() {
-        // Resolve logged-in tenant and its mapped owner
-        TenantDTO currentTenant = SessionManager.getInstance().getCurrentTenant();
+        // categories & priorities
+        categoryField.getItems().setAll("Maintenance","Billing Issue","Noise Complaint","Security","Other");
+        priorityField.getItems().setAll("Low","Medium","High");
 
-        if (currentTenant != null && currentTenant.getOwner() != null) {
-            OwnerDTO mappedOwner = currentTenant.getOwner();
-            ownerId = mappedOwner.getOwnerId();
-            String display =
-                    (mappedOwner.getName() != null && !mappedOwner.getName().isBlank())
-                            ? mappedOwner.getName()
-                            : "Owner #" + ownerId;
-            ownerNameLabel.setText(display);
-        } else {
-            ownerId = null;
-            ownerNameLabel.setText("Unknown Owner");
+        // IMPORTANT: populate owner for the logged-in tenant
+        loadOwnerForLoggedInTenant();
+    }
+
+
+
+    private void loadOwnerForLoggedInTenant() {
+        try {
+            TenantDTO tenant = SessionManager.getInstance().getCurrentTenant();
+            if (tenant == null) {
+                ownerNameLabel.setText("No tenant logged in");
+                return;
+            }
+
+            OwnerDTO owner = tenant.getOwner();
+            if (owner == null && tenant.getOwnerId() != null) {
+                owner = new OwnerService().getOwnerById(tenant.getOwnerId());
+            }
+
+            if (owner != null) {
+                ownerNameLabel.setText(owner.getName());
+                selectedOwnerId = owner.getOwnerId();
+            } else {
+                ownerNameLabel.setText("No owner linked");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            ownerNameLabel.setText("Error loading owner");
         }
-
-        // Populate UI choices
-        categoryField.getItems().setAll("Maintenance", "Billing Issue", "Noise Complaint", "Security", "Other");
-        priorityField.getItems().setAll("Low", "Medium", "High");
-
-        // Category -> ID mapping (ensure these match your backend)
-        categoryIds.put("Maintenance", 1L);
-        categoryIds.put("Billing Issue", 2L);
-        categoryIds.put("Noise Complaint", 3L);
-        categoryIds.put("Security", 4L);
-        categoryIds.put("Other", 5L);
     }
 
     @FXML
     private void handleSubmit() {
-        String category = categoryField.getValue();
-        String priority  = priorityField.getValue();
-        String description = descriptionField.getText() == null ? "" : descriptionField.getText().trim();
-
-        if (ownerId == null) {
-            showAlert(Alert.AlertType.ERROR, "Owner Missing",
-                    "Your account isn’t mapped to an owner. Please re-login or contact support.");
+        // Owner is already selected/locked; use selectedOwnerId
+        if (selectedOwnerId == null) {
+            showAlert(Alert.AlertType.ERROR, "Error", "No linked owner found for your account.");
             return;
         }
+
+        String category = categoryField.getValue();
+        String priority = priorityField.getValue();
+        String description = descriptionField.getText().trim();
         if (category == null || priority == null || description.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Missing Information",
-                    "Please select category, priority and enter a description.");
+            showAlert(Alert.AlertType.WARNING, "Missing Information", "Please fill all required fields.");
             return;
         }
 
         try {
             TenantDTO currentTenant = SessionManager.getInstance().getCurrentTenant();
-            if (currentTenant == null || currentTenant.getTenantId() == null) {
-                showAlert(Alert.AlertType.ERROR, "Authentication Error", "Please log in again.");
+            if (currentTenant == null) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Please log in again.");
                 return;
             }
 
-            Long tenantId = currentTenant.getTenantId();
-            Long categoryId = categoryIds.get(category);
-            if (categoryId == null) {
-                showAlert(Alert.AlertType.ERROR, "Unknown Category",
-                        "Selected category isn’t recognized. Please pick a valid category.");
-                return;
-            }
+            ComplaintDTO complaint = new ComplaintDTO();
+            complaint.setTitle(category);
+            complaint.setDescription(description);
+            complaint.setStatus("Pending");
+            complaint.setOwnerId(selectedOwnerId);     // ← the linked owner
 
-            // Normalize to enum-style names if backend expects them
-            String priorityValue = priority.toUpperCase(); // "LOW"/"MEDIUM"/"HIGH"
-
-            // Use category text as a simple title; change if you add a dedicated title field
-            String title = category;
-
-            // Call existing service signature: (Long, String, String, Long, String)
-            complaintService.addComplaint(
-                tenantId,
-                title,
-                description,
-                categoryId,
-                priorityValue
-            );
+            complaintService.addComplaint(currentTenant.getTenantId(), complaint);
 
             showAlert(Alert.AlertType.INFORMATION, "Complaint Submitted",
-                    "Your complaint has been recorded successfully.");
+                      "Your complaint has been recorded successfully.");
             closeForm();
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Failed to submit complaint",
-                    "An error occurred while submitting your complaint:\n" + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Failed to submit complaint", e.getMessage());
         }
+    }
+    private void markInvalid(Control control) {
+        control.setStyle("-fx-border-color: red;");
+        control.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                control.setStyle("");
+            }
+        });
+    }
+
+    private void showAlert(Alert.AlertType alertType, String title, String header, String content) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    private void showAlert(Alert.AlertType alertType, String title, String content) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    private void notifyOwnerDashboard() {
+        // In a real application, this would send a notification to the owner dashboard
+        // For now, we'll just print a message to the console
+        System.out.println("Complaint submitted - owner dashboard should refresh");
+        
+        // If we had access to the owner dashboard controller, we could call:
+        // ownerDashboardController.refreshComplaints();
     }
 
     @FXML
@@ -124,16 +151,6 @@ public class AddComplaintController {
 
     private void closeForm() {
         Stage stage = (Stage) submitButton.getScene().getWindow();
-        if (stage != null) {
-            stage.close();
-        }
-    }
-
-    private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+        stage.close();
     }
 }

@@ -2,72 +2,47 @@ package com.rentpal.rentpal_backend.controller;
 
 import com.rentpal.rentpal_backend.dto.ComplaintDTO;
 import com.rentpal.rentpal_backend.dto.CreateComplaintRequest;
-import com.rentpal.rentpal_backend.dto.UpdateComplaintStatusRequest;
 import com.rentpal.rentpal_backend.model.Complaint;
 import com.rentpal.rentpal_backend.service.ComplaintService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/complaints")
-@CrossOrigin(origins = "*")
 public class ComplaintController {
-
-    private static final Set<String> ALLOWED_STATUSES =
-            Set.of("Open", "Pending", "In Progress", "Resolved");
 
     @Autowired
     private ComplaintService complaintService;
 
-    // Add new complaint
     @PostMapping("/{tenantId}")
-    public Complaint addComplaint(@PathVariable Long tenantId,
-                                  @RequestBody CreateComplaintRequest complaintRequest) {
-        return complaintService.addComplaint(tenantId, complaintRequest);
+    public Complaint addComplaint(@PathVariable Long tenantId, @RequestBody ComplaintDTO dto) {
+        System.out.println("Received complaint for tenantId=" + tenantId + " → ownerId=" + dto.getOwnerId());
+        return complaintService.addComplaint(tenantId, dto);
     }
 
-    // Get complaints by owner
+    // Get complaints by owner, with optional ?status=ALL|PENDING|IN_PROGRESS|RESOLVED
     @GetMapping("/owner/{ownerId}")
-    public List<ComplaintDTO> getComplaintsByOwner(@PathVariable Long ownerId) {
-        return complaintService.getComplaintsByOwner(ownerId);
+    public List<ComplaintDTO> getComplaintsByOwner(
+            @PathVariable Long ownerId,
+            @RequestParam(defaultValue = "ALL") String status) {
+        return complaintService.getComplaintsByOwner(ownerId, status);
     }
 
-    // Get complaints by tenant
+    // Get complaints by tenant, with optional ?status=ALL|PENDING|IN_PROGRESS|RESOLVED
     @GetMapping("/tenant/{tenantId}")
-    public List<ComplaintDTO> getComplaintsByTenant(@PathVariable Long tenantId) {
-        return complaintService.getComplaintsByTenant(tenantId);
+    public List<ComplaintDTO> getComplaintsByTenant(
+            @PathVariable Long tenantId,
+            @RequestParam(defaultValue = "ALL") String status) {
+        return complaintService.getComplaintsByTenant(tenantId, status);
     }
 
-    // ---- Option A: Backward-compatible (query param) ----
-    @PutMapping("/{complaintId}")
-    public Complaint updateComplaintStatusParam(@PathVariable Long complaintId,
-                                                @RequestParam String status) {
-        validateStatus(status);
-        Complaint updated = complaintService.updateComplaintStatus(complaintId, status);
-        if (updated == null) throw new IllegalArgumentException("Complaint not found: " + complaintId);
-        return updated;
-    }
-
-    // ---- Option B: Preferred (JSON body) ----
+    // Update complaint status (prefer a dedicated /status path)
     @PutMapping("/{complaintId}/status")
-    public Complaint updateComplaintStatusBody(@PathVariable Long complaintId,
-                                               @RequestBody UpdateComplaintStatusRequest body) {
-        if (body == null || body.getStatus() == null || body.getStatus().isBlank()) {
-            throw new IllegalArgumentException("status is required");
-        }
-        validateStatus(body.getStatus());
-        Complaint updated = complaintService.updateComplaintStatus(complaintId, body.getStatus());
-        if (updated == null) throw new IllegalArgumentException("Complaint not found: " + complaintId);
-        return updated;
+    public Complaint updateComplaintStatus(
+            @PathVariable Long complaintId,
+            @RequestParam String status) {
+        return complaintService.updateComplaintStatus(complaintId, status);
     }
 
-    private void validateStatus(String status) {
-        if (!ALLOWED_STATUSES.contains(status)) {
-            throw new IllegalArgumentException(
-                "Invalid status. Allowed: " + String.join(", ", ALLOWED_STATUSES));
-        }
-    }
 }

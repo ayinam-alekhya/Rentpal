@@ -4,8 +4,10 @@ import com.rentpal.rentpal_backend.dto.CreatePaymentRequest;
 import com.rentpal.rentpal_backend.model.Payment;
 import com.rentpal.rentpal_backend.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -25,8 +27,15 @@ public class PaymentController {
         return paymentService.getAllPayments();
     }
 
+    // GET payments for a tenant with optional filters
     @GetMapping("/tenant/{tenantId}")
-    public List<Payment> getPaymentsByTenant(@PathVariable Long tenantId) {
-        return paymentService.getPaymentsByTenant(tenantId);
+    public List<Payment> getPaymentsByTenant(
+            @PathVariable Long tenantId,
+            @RequestParam(defaultValue = "ALL") String status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+
+        return paymentService.getPaymentsByTenant(tenantId, status, from, to);
     }
+
 }

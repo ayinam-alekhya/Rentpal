@@ -6,5 +6,7 @@ import java.util.List;
 
 public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     List<Complaint> findByOwner_OwnerId(Long ownerId);
+    List<Complaint> findByOwner_OwnerIdAndStatusIgnoreCase(Long ownerId, String status);
     List<Complaint> findByTenant_TenantId(Long tenantId);
+    List<Complaint> findByTenant_TenantIdAndStatusIgnoreCase(Long tenantId, String status);
 }

@@ -44,8 +44,22 @@ public class TenantProfileController {
     @FXML
     public void initialize() {
         statusCombo.setItems(FXCollections.observableArrayList("Active", "Inactive"));
-        loadTenantProfileData();
         setEditable(false);
+        loadTenantProfileData();
+        playFadeIn(rootPane);
+    }
+    public void loadTenant(TenantDTO dto, boolean editable, boolean ownerView) {
+        if (dto == null) return;
+
+        nameField.setText(dto.getName() != null ? dto.getName() : "");
+        emailField.setText(dto.getEmail() != null ? dto.getEmail() : "");
+        phoneField.setText(dto.getPhone() != null ? dto.getPhone() : "");
+        apartmentField.setText(dto.getRoomNumber() != null ? dto.getRoomNumber() : "");
+        statusCombo.getSelectionModel().select(dto.getStatus() != null ? dto.getStatus() : "Active");
+
+        setEditable(editable);
+        statusCombo.setDisable(!ownerView);
+        changePhotoBtn.setVisible(editable);
         playFadeIn(rootPane);
     }
 
@@ -82,24 +96,28 @@ public class TenantProfileController {
         }
     }
 
-    public void loadTenant(Tenant tenant, boolean editable, boolean ownerView) {
-        this.tenant = tenant;
-        this.editable = editable;
-        this.ownerView = ownerView;
+    public void loadTenant(Tenant row, boolean editable, boolean ownerView) {
+        if (row == null) return;
+        try {
+            // fetch full tenant to get email & other fields
+            TenantDTO full = tenantService.getTenantById(row.getTenantId());
+            loadTenant(full, editable, ownerView);   // reuse the DTO overload above
+        } catch (Exception e) {
+            e.printStackTrace();
+            // fallback (no email available in row class)
+            nameField.setText(row.getName());
+            // DO NOT blank the email here
+            phoneField.setText(row.getContact());
+            apartmentField.setText(row.getUnit());
+            statusCombo.getSelectionModel().select(row.getStatus());
 
-        if (tenant != null) {
-            nameField.setText(tenant.getName());
-            emailField.setText("");
-            phoneField.setText(tenant.getContact());
-            apartmentField.setText(tenant.getUnit());
-            statusCombo.getSelectionModel().select(tenant.getStatus());
+            setEditable(editable);
+            statusCombo.setDisable(!ownerView);
+            changePhotoBtn.setVisible(editable);
+            playFadeIn(rootPane);
         }
-
-        setEditable(editable);
-        statusCombo.setDisable(!ownerView);
-        changePhotoBtn.setVisible(editable);
-        playFadeIn(rootPane);
     }
+
 
     private void setEditable(boolean value) {
         nameField.setEditable(value);

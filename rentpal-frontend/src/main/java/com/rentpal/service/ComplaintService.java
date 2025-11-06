@@ -5,65 +5,61 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rentpal.dto.ComplaintDTO;
 import com.rentpal.utils.ApiUtil;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class ComplaintService {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    // --- Lists ---
-    public List<ComplaintDTO> getComplaintsByOwner(Long ownerId) throws Exception {
-        String json = ApiUtil.get("/complaints/owner/" + ownerId);
-        return MAPPER.readValue(json, new TypeReference<List<ComplaintDTO>>() {});
+    // --- GET BY OWNER with optional status filter ---
+    public List<ComplaintDTO> getComplaintsByOwner(Long ownerId, String status) throws Exception {
+        // default to ALL when null/empty
+        String s = (status == null || status.isBlank()) ? "ALL" : status;
+        String json = ApiUtil.get("/complaints/owner/" + ownerId + "?status=" + s);
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(json, new TypeReference<List<ComplaintDTO>>() {});
     }
 
-    public List<ComplaintDTO> getComplaintsByTenant(Long tenantId) throws Exception {
-        String json = ApiUtil.get("/complaints/tenant/" + tenantId);
-        return MAPPER.readValue(json, new TypeReference<List<ComplaintDTO>>() {});
+
+    // Convenience overload (defaults to ALL)
+    public List<ComplaintDTO> getComplaintsByOwner(long ownerId) throws Exception {
+        return getComplaintsByOwner(ownerId, "ALL");
     }
 
-    // --- Create complaint (backend expects categoryId + priority) ---
-    public ComplaintDTO addComplaint(Long tenantId,
-                                     String title,
-                                     String description,
-                                     Long categoryId,
-                                     String priority) throws Exception {
-        CreateComplaintRequest req = new CreateComplaintRequest();
-        req.setTitle(title);
-        req.setDescription(description);
-        req.setCategoryId(categoryId);     // required by backend
-        req.setPriority(priority);         // "LOW" | "MEDIUM" | "HIGH"
+    // --- GET BY TENANT with optional status filter ---
+    public List<ComplaintDTO> getComplaintsByTenant(Long tenantId, String status) throws Exception {
+        String s = (status == null || status.isBlank()) ? "ALL" : status;
+        String url = "/complaints/tenant/" + tenantId;
 
-        // Do NOT set ownerId or dateSubmitted here; server should infer/set them
-        String jsonInput  = MAPPER.writeValueAsString(req);
-        String jsonOutput = ApiUtil.post("/complaints/" + tenantId, jsonInput);
-        return MAPPER.readValue(jsonOutput, ComplaintDTO.class);
+        // only append ?status= when not ALL (match your backend contract)
+        if (!"ALL".equalsIgnoreCase(s)) {
+            url += "?status=" + s;
+        }
+
+        String json = ApiUtil.get(url);
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(json, new TypeReference<List<ComplaintDTO>>() {});
     }
 
-    // --- Update status (owner changes) ---
-    public ComplaintDTO updateComplaintStatus(Long complaintId, String status) throws Exception {
-        String safe = ApiUtil.encode(status == null ? "" : status);
-        String jsonOutput = ApiUtil.put("/complaints/" + complaintId + "?status=" + safe);
-        return MAPPER.readValue(jsonOutput, ComplaintDTO.class);
+    // Convenience overload (defaults to ALL)
+    public List<ComplaintDTO> getComplaintsByTenant(long tenantId) throws Exception {
+        return getComplaintsByTenant(tenantId, "ALL");
     }
 
-    // Request that matches backend create schema (categoryId+priority)
-    public static class CreateComplaintRequest {
-        private String title;
-        private String description;
-        private Long categoryId;
-        private String priority;
+    // --- CREATE complaint (make sure complaint.setOwnerId(...) was set by the caller) ---
+    public ComplaintDTO addComplaint(long tenantId, ComplaintDTO complaint) throws Exception {
+        String body = MAPPER.writeValueAsString(complaint);
+        String json = ApiUtil.post("/complaints/" + tenantId, body);
+        return MAPPER.readValue(json, ComplaintDTO.class);
+    }
 
-        public String getTitle() { return title; }
-        public void setTitle(String title) { this.title = title; }
-
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
-
-        public Long getCategoryId() { return categoryId; }
-        public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
-
-        public String getPriority() { return priority; }
-        public void setPriority(String priority) { this.priority = priority; }
+    // --- UPDATE status (matches backend: PUT /api/complaints/{id}/status?status=RESOLVED) ---
+    public ComplaintDTO updateComplaintStatus(long complaintId, String status) throws Exception {
+        String url = "/complaints/" + complaintId + "/status?status=" +
+                     URLEncoder.encode(status, StandardCharsets.UTF_8);
+        String json = ApiUtil.put(url, ""); // empty body is fine
+        return MAPPER.readValue(json, ComplaintDTO.class);
     }
 }

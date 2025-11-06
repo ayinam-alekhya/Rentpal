@@ -1,13 +1,15 @@
 package com.rentpal.rentpal_backend.service;
 
 import com.rentpal.rentpal_backend.dto.UserRegistrationDTO;
+import com.rentpal.rentpal_backend.exception.ResourceNotFoundException;
 import com.rentpal.rentpal_backend.model.Owner;
 import com.rentpal.rentpal_backend.model.Tenant;
 import com.rentpal.rentpal_backend.repository.OwnerRepository;
 import com.rentpal.rentpal_backend.repository.TenantRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
@@ -18,12 +20,6 @@ public class AuthService {
 
     @Autowired
     private TenantRepository tenantRepository;
-      public AuthService(OwnerRepository ownerRepo, TenantRepository tenantRepo,
-                     @Value("${spring.datasource.url}") String url) {
-    this.ownerRepository = ownerRepo;
-    this.tenantRepository = tenantRepo;
-    System.out.println("=== JDBC URL === " + url);
-  }
 
     public Owner registerOwner(UserRegistrationDTO registrationDTO) {
         Owner owner = new Owner();
@@ -31,82 +27,97 @@ public class AuthService {
         owner.setEmail(registrationDTO.getEmail());
         owner.setPhone(registrationDTO.getPhone() != null ? registrationDTO.getPhone() : "");
         owner.setAddress(registrationDTO.getAddress() != null ? registrationDTO.getAddress() : "");
-        // In a real application, you would hash the password before saving
-        // TODO: Implement proper password hashing
         return ownerRepository.save(owner);
     }
 
+    /**
+     * Upsert-by-email + attach to owner.
+     * If a tenant with this email already exists (e.g., created from Owner Dashboard),
+     * we UPDATE that record instead of creating a duplicate.
+     */
+    @Transactional
     public Tenant registerTenant(UserRegistrationDTO registrationDTO) {
-        Tenant tenant = new Tenant();
-        tenant.setName(registrationDTO.getName());
-        tenant.setEmail(registrationDTO.getEmail());
-        tenant.setPhone(registrationDTO.getPhone() != null ? registrationDTO.getPhone() : "");
-        tenant.setRoomNumber(registrationDTO.getRoomNumber() != null ? registrationDTO.getRoomNumber() : "");
-        tenant.setRentAmount(registrationDTO.getRentAmount() != null ? registrationDTO.getRentAmount() : 0.0);
-        tenant.setRemainingRent(registrationDTO.getRentAmount() != null ? registrationDTO.getRentAmount() : 0.0);
-        tenant.setPaymentStatus("Unpaid");
+        // 1) Owner is required for tenant signup
+        if (registrationDTO.getOwnerId() == null) {
+            throw new IllegalArgumentException("ownerId is required for tenant registration");
+        }
+        Owner owner = ownerRepository.findById(registrationDTO.getOwnerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Owner not found with ID: " + registrationDTO.getOwnerId()));
+
+        // 2) Try to find existing tenant by email
+        Tenant tenant = null;
+        String email = registrationDTO.getEmail();
+
+        if (email != null && !email.isBlank()) {
+            List<Tenant> matches = tenantRepository.findAllByEmailIgnoreCase(email);
+
+            if (matches.isEmpty()) {
+                tenant = new Tenant();
+                tenant.setEmail(email);
+            } else if (matches.size() == 1) {
+                tenant = matches.get(0); // claim existing pre-created tenant
+            } else {
+                // If duplicates still exist (until you clean the DB), prefer the one under this owner
+                tenant = matches.stream()
+                        .filter(t -> t.getOwner() != null && t.getOwner().getOwnerId().equals(owner.getOwnerId()))
+                        .findFirst()
+                        .orElse(matches.get(0)); // fallback: pick the first, or throw to force cleanup
+            }
+        } else {
+            tenant = new Tenant(); // email missing (not recommended) – still allow creation
+        }
+
+        // 3) Fill/overwrite fields
+        if (registrationDTO.getName() != null) tenant.setName(registrationDTO.getName());
+        tenant.setPhone(registrationDTO.getPhone() != null ? registrationDTO.getPhone() : (tenant.getPhone() == null ? "" : tenant.getPhone()));
+        tenant.setRoomNumber(registrationDTO.getRoomNumber() != null ? registrationDTO.getRoomNumber() : (tenant.getRoomNumber() == null ? "" : tenant.getRoomNumber()));
+        if (registrationDTO.getRentAmount() != null) {
+            tenant.setRentAmount(registrationDTO.getRentAmount());
+            tenant.setRemainingRent(registrationDTO.getRentAmount());
+        }
+        tenant.setPaymentStatus(tenant.getPaymentStatus() == null ? "Unpaid" : tenant.getPaymentStatus());
         tenant.setStatus("Active");
-        // In a real application, you would hash the password before saving
-        // TODO: Implement proper password hashing
+
+        // 4) Attach owner
+        tenant.setOwner(owner);
+
+        // 5) Save
         return tenantRepository.save(tenant);
     }
 
     public Owner authenticateOwner(String email, String password) {
         System.out.println("Authenticating owner with email: " + email);
         Owner owner = ownerRepository.findByEmail(email);
-        System.out.println("Owner found: " + (owner != null ? owner.getName() : "null"));
-        
-        // In a real application, you would hash and compare passwords
-        // For now, we'll just check if the email exists and return the owner
-        // TODO: Implement proper password hashing and verification
-        
-        // For demonstration purposes, we'll accept any password for existing owners
-        // In a real application, you would verify the hashed password
         if (owner != null) {
             System.out.println("Owner authenticated: " + owner.getName() + " (" + owner.getEmail() + ")");
             return owner;
         }
-        
         return null;
     }
 
+    /**
+     * Safe tenant auth: no single-result queries.
+     * Returns the single match; if duplicates exist, you can:
+     *  - prefer one by some rule, or
+     *  - return null to force user to clarify.
+     */
     public Tenant authenticateTenant(String email, String password) {
         System.out.println("Authenticating tenant with email: " + email);
-        Tenant tenant = tenantRepository.findByEmail(email);
-        System.out.println("Tenant found by email: " + (tenant != null ? tenant.getName() : "null"));
-        
-        // In a real application, you would hash and compare passwords
-        // For now, we'll just check if the email exists and return the tenant
-        // TODO: Implement proper password hashing and verification
-        
-        // If tenant is not found by email, try to find by name (fallback for existing tenants without emails)
-        if (tenant == null) {
-            // This is a temporary workaround for existing tenants without emails
-            // In a real application, all tenants should have emails
-            try {
-                // Try to parse email as a name if it contains no @ symbol
-                if (!email.contains("@")) {
-                    // Try to find tenant by name
-                    System.out.println("Trying to find tenant by name: " + email);
-                    List<Tenant> tenants = tenantRepository.findByName(email);
-                    if (!tenants.isEmpty()) {
-                        tenant = tenants.get(0); // Return first match
-                        System.out.println("Tenant found by name: " + tenant.getName());
-                    }
-                }
-            } catch (Exception e) {
-                System.out.println("Error finding tenant by name: " + e.getMessage());
-                // Ignore and return null
-            }
+
+        List<Tenant> matches = tenantRepository.findAllByEmailIgnoreCase(email);
+        if (matches.isEmpty()) {
+            // Optional: keep your name fallback, but it's better to remove it for security/clarity
+            System.out.println("No tenant found by email.");
+            return null;
         }
-        
-        // For demonstration purposes, we'll accept any password for existing tenants
-        // In a real application, you would verify the hashed password
-        if (tenant != null) {
-            System.out.println("Tenant authenticated: " + tenant.getName() + " (" + tenant.getEmail() + ")");
-            return tenant;
+        if (matches.size() > 1) {
+            // Avoid throwing; log and return null (your controller will send 401 cleanly)
+            System.out.println("Multiple tenants found for email: " + email + " -> " + matches.size());
+            return null;
         }
-        
-        return null;
+
+        Tenant tenant = matches.get(0);
+        System.out.println("Tenant authenticated: " + tenant.getName() + " (" + tenant.getEmail() + ")");
+        return tenant;
     }
 }

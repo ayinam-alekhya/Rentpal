@@ -1,99 +1,87 @@
 package com.rentpal.controllers.ownerdashboard;
 
 import com.rentpal.dto.ComplaintDTO;
-import com.rentpal.dto.OwnerDTO;
 import com.rentpal.service.ComplaintService;
 import com.rentpal.utils.SessionManager;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;                       // <-- JavaFX event
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TableColumn;              // <-- JavaFX TableColumn
-import javafx.scene.control.TableView;                // <-- JavaFX TableView
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.*;
 
 import java.util.List;
 
 public class OwnerComplaintsController {
 
-    @FXML private TableView<ComplaintDTO> complaintsTable;
+    @FXML private TableView<ComplaintDTO> table;
     @FXML private TableColumn<ComplaintDTO, Long> colId;
-    @FXML private TableColumn<ComplaintDTO, String> colTitle;
-    @FXML private TableColumn<ComplaintDTO, String> colDescription;
+    @FXML private TableColumn<ComplaintDTO, String> colTenant;
+    @FXML private TableColumn<ComplaintDTO, String> colIssue;
     @FXML private TableColumn<ComplaintDTO, String> colStatus;
+    @FXML private TableColumn<ComplaintDTO, String> colDate;
 
-    @FXML private ComboBox<String> statusCombo;      // e.g. Pending/IN_PROGRESS/RESOLVED
-    @FXML private Button updateStatusBtn;
+    @FXML private ComboBox<String> filterCombo;
+    @FXML private Button markInProgressBtn;
+    @FXML private Button markResolvedBtn;
 
     private final ComplaintService complaintService = new ComplaintService();
     private final ObservableList<ComplaintDTO> complaints = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
-        // Table column bindings (match DTO getters)
-        colId.setCellValueFactory(new PropertyValueFactory<>("complaintId"));
-        colTitle.setCellValueFactory(new PropertyValueFactory<>("title"));
-        colDescription.setCellValueFactory(new PropertyValueFactory<>("description"));
-        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+        // Map FXML columns
+        colId.setCellValueFactory(c -> new javafx.beans.property.SimpleLongProperty(c.getValue().getComplaintId()).asObject());
+        colTenant.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(
+                c.getValue().getOwnerId() != null ? "Tenant of Owner #" + c.getValue().getOwnerId() : "N/A"));
+        colIssue.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getTitle()));
+        colStatus.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getStatus()));
+        colDate.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getDateSubmitted()));
 
-        complaintsTable.setItems(complaints);
+        table.setItems(complaints);
 
-        // Populate status options (adjust to your backend values)
-        statusCombo.setItems(FXCollections.observableArrayList("Pending", "IN_PROGRESS", "RESOLVED"));
+        // Populate dropdown
+        filterCombo.setItems(FXCollections.observableArrayList("ALL", "PENDING", "IN_PROGRESS", "RESOLVED"));
+        filterCombo.getSelectionModel().select("ALL");
 
-        loadComplaintsForOwner();
+        filterCombo.valueProperty().addListener((obs, old, val) -> reload());
+        reload();
+
+        // Status change buttons
+        markInProgressBtn.setOnAction(e -> updateStatus("IN_PROGRESS"));
+        markResolvedBtn.setOnAction(e -> updateStatus("RESOLVED"));
     }
 
-    private void loadComplaintsForOwner() {
+    private void reload() {
         try {
-            OwnerDTO owner = SessionManager.getInstance().getCurrentOwner();
-            if (owner == null || owner.getOwnerId() == null) {
-                showAlert(Alert.AlertType.ERROR, "No Owner", "You must be logged in as an owner.");
-                return;
-            }
-            List<ComplaintDTO> list = complaintService.getComplaintsByOwner(owner.getOwnerId());
+            Long ownerId = SessionManager.getInstance().getCurrentOwner().getOwnerId();
+            String status = filterCombo.getValue();
+            List<ComplaintDTO> list = complaintService.getComplaintsByOwner(ownerId, status);
             complaints.setAll(list);
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Load Failed", "Could not load complaints: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Error", "Failed to load complaints: " + e.getMessage());
         }
     }
 
-    @FXML
-    private void handleUpdateStatus(ActionEvent evt) {
-        ComplaintDTO selected = complaintsTable.getSelectionModel().getSelectedItem();
-        String newStatus = statusCombo.getValue();
-
+    private void updateStatus(String newStatus) {
+        ComplaintDTO selected = table.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showAlert(Alert.AlertType.WARNING, "No selection", "Select a complaint first.");
+            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a complaint first.");
             return;
         }
-        if (newStatus == null || newStatus.isBlank()) {
-            showAlert(Alert.AlertType.WARNING, "No status", "Choose a status to set.");
-            return;
-        }
-
         try {
-            ComplaintDTO updated = complaintService.updateComplaintStatus(selected.getComplaintId(), newStatus);
-            // Update the table model
-            selected.setStatus(updated.getStatus());
-            complaintsTable.refresh();
-            showAlert(Alert.AlertType.INFORMATION, "Updated", "Status updated to " + updated.getStatus());
+            complaintService.updateComplaintStatus(selected.getComplaintId(), newStatus);
+            reload(); // refresh table
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Update Failed", "Could not update status: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Error", "Failed to update complaint status: " + e.getMessage());
         }
     }
 
     private void showAlert(Alert.AlertType type, String title, String msg) {
-        Alert a = new Alert(type);
-        a.setTitle(title);
-        a.setHeaderText(null);
-        a.setContentText(msg);
-        a.showAndWait();
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        alert.showAndWait();
     }
 }

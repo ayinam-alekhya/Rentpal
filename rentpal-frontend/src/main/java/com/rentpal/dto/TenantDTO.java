@@ -14,6 +14,7 @@ public class TenantDTO {
     private double remainingRent;
     private String paymentStatus;
     private OwnerDTO owner; // Add owner field
+    private Long ownerId;
 
     // Default constructor
     public TenantDTO() {}
@@ -98,4 +99,6 @@ public class TenantDTO {
     public void setOwner(OwnerDTO owner) {
         this.owner = owner;
     }
+    public Long getOwnerId() { return ownerId; }
+    public void setOwnerId(Long ownerId) { this.ownerId = ownerId; }
 }
