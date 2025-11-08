@@ -4,6 +4,7 @@ import com.rentpal.dto.PaymentDTO;
 import com.rentpal.utils.ApiUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +23,12 @@ public class PaymentService {
         String json = ApiUtil.get("/payments/tenant/" + tenantId);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(json, new TypeReference<List<PaymentDTO>>() {});
+    }
+
+    public List<PaymentDTO> getPaymentsByOwner(Long ownerId) throws Exception {
+        String json = ApiUtil.get("/payments/owner/" + ownerId);
+        ObjectMapper m = new ObjectMapper();
+        return m.readValue(json, new com.fasterxml.jackson.core.type.TypeReference<List<PaymentDTO>>(){});
     }
 
     /** NEW: filter by status and optional date range (YYYY-MM-DD) */
@@ -51,5 +58,11 @@ public class PaymentService {
         System.out.println("Sending payment data: " + jsonInput);
         String jsonOutput = ApiUtil.post("/payments/" + tenantId, jsonInput);
         return mapper.readValue(jsonOutput, PaymentDTO.class);
+    }
+    public PaymentDTO updatePaymentStatus(Long paymentId, String status) throws Exception {
+        String body = "{\"status\":\"" + status + "\"}";
+        String json = ApiUtil.put("/payments/" + paymentId + "/status", body);
+        return new com.fasterxml.jackson.databind.ObjectMapper()
+                .readValue(json, PaymentDTO.class);
     }
 }

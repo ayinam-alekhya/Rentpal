@@ -10,6 +10,8 @@ public class PaymentDTO {
     private String paymentDate; // This will be a string representation for JSON
     private String status;
     private String transactionId;
+    private Long tenantId;
+    private String tenantName;
 
     // Default constructor
     public PaymentDTO() {}
@@ -26,6 +28,12 @@ public class PaymentDTO {
     public double getAmount() {
         return amount;
     }
+
+    public Long getTenantId() { return tenantId; }
+    public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
+
+    public String getTenantName() { return tenantName; }
+    public void setTenantName(String tenantName) { this.tenantName = tenantName; }
 
     public void setAmount(double amount) {
         this.amount = amount;

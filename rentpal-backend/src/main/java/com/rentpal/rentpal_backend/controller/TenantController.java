@@ -60,23 +60,31 @@ public class TenantController {
 
     // ✅ Create tenant
     @PostMapping
-    public Tenant createTenant(@RequestBody CreateTenantRequest tenantRequest) {
-        // Convert DTO to entity
-        Tenant tenant = new Tenant();
-        tenant.setName(tenantRequest.getName());
-        tenant.setEmail(tenantRequest.getEmail());
-        tenant.setPhone(tenantRequest.getPhone());
-        tenant.setRoomNumber(tenantRequest.getRoomNumber());
-        tenant.setRentAmount(tenantRequest.getRentAmount());
-        
-        // Set owner if provided
-        if (tenantRequest.getOwnerId() != null) {
-            Owner owner = new Owner();
-            owner.setOwnerId(tenantRequest.getOwnerId());
-            tenant.setOwner(owner);
+    @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
+    public com.rentpal.rentpal_backend.dto.TenantDTO createTenant(@RequestBody CreateTenantRequest req) {
+        // ✅ use the DTO overload that sets owner + password
+        com.rentpal.rentpal_backend.model.Tenant saved = tenantService.createTenant(req);
+
+        // map to DTO (reuse your style from getTenantById)
+        com.rentpal.rentpal_backend.dto.TenantDTO dto = new com.rentpal.rentpal_backend.dto.TenantDTO();
+        dto.setTenantId(saved.getTenantId());
+        dto.setName(saved.getName());
+        dto.setEmail(saved.getEmail());
+        dto.setPhone(saved.getPhone());
+        dto.setRoomNumber(saved.getRoomNumber());
+        dto.setRentAmount(saved.getRentAmount());
+        dto.setStatus(saved.getStatus());
+        dto.setRemainingRent(saved.getRemainingRent());
+        dto.setPaymentStatus(saved.getPaymentStatus());
+        if (saved.getOwner() != null) {
+            dto.setOwnerId(saved.getOwner().getOwnerId());
+            var od = new com.rentpal.rentpal_backend.dto.OwnerDTO();
+            od.setOwnerId(saved.getOwner().getOwnerId());
+            od.setName(saved.getOwner().getName());
+            od.setEmail(saved.getOwner().getEmail());
+            dto.setOwner(od);
         }
-        
-        return tenantService.createTenant(tenant);
+        return dto;
     }
 
     @PutMapping("/{id}")

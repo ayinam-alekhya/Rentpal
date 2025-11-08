@@ -7,6 +7,7 @@ public class CreateTenantRequest {
     private String roomNumber;
     private double rentAmount;
     private Long ownerId;
+    private String password;
 
     // Getters and Setters
     public String getName() { return name; }
@@ -26,4 +27,7 @@ public class CreateTenantRequest {
 
     public Long getOwnerId() { return ownerId; }
     public void setOwnerId(Long ownerId) { this.ownerId = ownerId; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 }

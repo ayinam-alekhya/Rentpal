@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class TenantSummaryDTO {
     private Long tenantId;
     private String name;
-    private String phone;        // ← add this
+    private String phone;       
     private String roomNumber;
     private double remainingRent;
     private String paymentStatus;
@@ -17,7 +17,7 @@ public class TenantSummaryDTO {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    public String getPhone() { return phone; }           // ← add this
+    public String getPhone() { return phone; }           
     public void setPhone(String phone) { this.phone = phone; }
 
     public String getRoomNumber() { return roomNumber; }

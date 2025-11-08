@@ -9,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import com.rentpal.controllers.payments.AddPaymentController;
+import javafx.scene.control.cell.ComboBoxTableCell;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -39,50 +40,113 @@ public class PaymentsController {
     private final ObservableList<Payment> filteredPayments = FXCollections.observableArrayList();
 
 
+
+
     @FXML
     public void initialize() {
-       filterComboBox.setItems(FXCollections.observableArrayList("ALL", "PAID", "PENDING", "OVERDUE"));
+        // Existing filters
+        filterComboBox.setItems(FXCollections.observableArrayList("ALL", "PAID", "PENDING", "OVERDUE", "REFUNDED"));
+        filterComboBox.getSelectionModel().select("ALL");
 
+        // Column bindings
         colDate.setCellValueFactory(c -> c.getValue().dateProperty());
         colTenant.setCellValueFactory(c -> c.getValue().tenantProperty());
         colAmount.setCellValueFactory(c -> c.getValue().amountProperty());
         colStatus.setCellValueFactory(c -> c.getValue().statusProperty());
         colMethod.setCellValueFactory(c -> c.getValue().methodProperty());
 
-        paymentsTable.setItems(filteredPayments);
+        // ✅ Make editable only for Owner
+        boolean editable = SessionManager.getInstance().isOwner();
+        paymentsTable.setEditable(editable);
+        colStatus.setEditable(editable);
 
-        // listeners
-        filterComboBox.getSelectionModel().select("ALL");
-        filterComboBox.valueProperty().addListener((o, ov, nv) -> applyPaymentsFilter());
-        searchField.textProperty().addListener((o, ov, nv) -> applyPaymentsFilter());
+        if (editable) {
+            // Allow editing via ComboBox when owner is logged in
+            colStatus.setCellFactory(ComboBoxTableCell.forTableColumn(
+                    "PAID", "PENDING", "OVERDUE", "REFUNDED"
+            ));
 
-        loadPaymentsFromBackend();  // fills allPayments then apply filter
-        updateStats();
-    }
+            colStatus.setOnEditCommit(evt -> {
+                Payment row = evt.getRowValue();
+                String newStatus = evt.getNewValue();
+                try {
+                    paymentService.updatePaymentStatus(row.getPaymentId(), newStatus);
+                    row.setStatus(newStatus);
+                    updateStats();
+                } catch (Exception ex) {
+                    showAlert(Alert.AlertType.ERROR, "Update failed",
+                            "Could not update status: " + ex.getMessage());
+                    paymentsTable.refresh();
+                }
+            });
+        }
+
+    paymentsTable.setItems(filteredPayments);
+
+    // Listeners for filters
+    filterComboBox.valueProperty().addListener((o, ov, nv) -> applyPaymentsFilter());
+    searchField.textProperty().addListener((o, ov, nv) -> applyPaymentsFilter());
+
+    // Initial data load
+    loadPaymentsFromBackend();
+    updateStats();
+}
+
 
     private void loadPaymentsFromBackend() {
         try {
-            List<PaymentDTO> paymentDTOs = paymentService.getAllPayments();
             allPayments.clear();
-            for (PaymentDTO dto : paymentDTOs) {
-                String displayDate = formatPaymentDate(dto.getPaymentDate()); // keep your formatter
-                allPayments.add(new Payment(
-                        displayDate,
-                        // TODO: replace placeholder with real tenant name if your API returns it
-                        "Tenant " + (dto.getPaymentId() != null ? dto.getPaymentId() : "N/A"),
-                        0L,
-                        dto.getAmount(),
-                        normalize(dto.getStatus()),
-                        dto.getModeOfPayment()
-                ));
+
+            List<PaymentDTO> dtos;
+            if (SessionManager.getInstance().isOwner()) {
+                Long ownerId = SessionManager.getInstance().getCurrentOwner().getOwnerId();
+                dtos = paymentService.getPaymentsByOwner(ownerId); // see service patch below
+            } else if (SessionManager.getInstance().isTenant()) {
+                Long tenantId = SessionManager.getInstance().getCurrentTenant().getTenantId();
+                dtos = paymentService.getPaymentsByTenant(tenantId);
+            } else {
+                dtos = paymentService.getAllPayments();
             }
-            applyPaymentsFilter();   // <- refresh table based on current dropdown + search
+
+            mapDtosToRowsInto(allPayments, dtos);
+            applyPaymentsFilter();   // refresh the table
             updateStats();
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to load payments: " + e.getMessage());
         }
     }
+
+    private void mapDtosToRowsInto(ObservableList<Payment> target, List<PaymentDTO> paymentDTOs) {
+        if (paymentDTOs == null) return;
+        for (PaymentDTO dto : paymentDTOs) {
+            String displayDate = normalizeDate(dto.getPaymentDate());
+            target.add(new Payment(
+                dto.getPaymentId(), 
+                displayDate,
+                // fallbacks if backend doesn’t yet send these
+                dto.getTenantName() != null ? dto.getTenantName() : "Tenant",
+                dto.getTenantId(), 
+                dto.getAmount(),
+                dto.getStatus(),
+                dto.getModeOfPayment()
+            ));
+        }
+    }
+
+    private String normalizeDate(String dateStr) {
+        if (dateStr == null || dateStr.isBlank()) return "N/A";
+        // quick normalizer: cut off time if present
+        if (dateStr.length() >= 10) {
+            String ymd = dateStr.substring(0, 10);
+            try {
+                LocalDate d = LocalDate.parse(ymd);
+                return d.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"));
+            } catch (Exception ignore) {}
+        }
+        return dateStr;
+    }
+
     private void applyPaymentsFilter() {
         String wanted = normalize(filterComboBox.getValue()); // "ALL"/"PAID"/"PENDING"/"OVERDUE"
         String q = (searchField.getText() == null) ? "" : searchField.getText().trim().toLowerCase();
@@ -152,6 +216,29 @@ public class PaymentsController {
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to load Add Payment dialog: " + e.getMessage());
         }
     }
+
+    private void mapDtosToRows(List<PaymentDTO> dtos) {
+        allPayments.clear();
+        for (PaymentDTO dto : dtos) {
+            String displayDate = formatPaymentDate(dto.getPaymentDate());
+
+            Long safeTenantId = dto.getTenantId() != null ? dto.getTenantId() : 0L;
+            String tenantName  = (dto.getTenantName() != null && !dto.getTenantName().isBlank())
+                    ? dto.getTenantName() : "Tenant";
+
+            allPayments.add(new Payment(
+                dto.getPaymentId(), 
+                displayDate,
+                tenantName,
+                safeTenantId,                 // never null
+                dto.getAmount(),
+                dto.getStatus(),
+                dto.getModeOfPayment()
+            ));
+        }
+        filteredPayments.setAll(allPayments);
+    }
+
 
     private void updateStats() {
         var items = filteredPayments.isEmpty() ? allPayments : filteredPayments;

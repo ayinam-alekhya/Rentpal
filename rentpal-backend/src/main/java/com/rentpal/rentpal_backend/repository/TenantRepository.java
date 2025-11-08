@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TenantRepository extends JpaRepository<Tenant, Long> {
+    boolean existsByEmail(String email);
+    boolean existsByPhone(String phone);
+    long countByOwner_OwnerId(Long ownerId);
     Optional<Tenant> findByEmailIgnoreCase(String email);
     List<Tenant> findByName(String name);
     List<Tenant> findAllByEmailIgnoreCase(String email);

@@ -36,6 +36,12 @@
         </VBox>
 
         <VBox styleClass="stat-card" alignment="CENTER">
+            <Label text="Overdues" styleClass="stat-title"/>
+            <Label fx:id="overdues" text="0" styleClass="stat-value"/>
+        </VBox>
+
+
+        <VBox styleClass="stat-card" alignment="CENTER">
             <Label text="Complaints Raised" styleClass="stat-title"/>
             <Label fx:id="complaintsRaised" text="0" styleClass="stat-value"/>
         </VBox>

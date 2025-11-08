@@ -6,6 +6,7 @@ import com.rentpal.dto.OwnerDTO;
 import com.rentpal.dto.TenantDTO;
 import com.rentpal.dto.UserRegistrationDTO;
 import com.rentpal.utils.ApiUtil;
+import com.rentpal.utils.SessionManager; 
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,6 +54,7 @@ public class AuthService {
                     return new AuthResult(true, "owner", owner, null);
                 } else if ("tenant".equals(userType)) {
                     TenantDTO tenant = mapper.treeToValue(userNode, TenantDTO.class);
+                    SessionManager.getInstance().setCurrentTenant(tenant);
                     System.out.println("Tenant authenticated: " + tenant.getName());
                     return new AuthResult(true, "tenant", null, tenant);
                 }

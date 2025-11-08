@@ -5,7 +5,10 @@ import com.rentpal.rentpal_backend.model.Owner;
 import com.rentpal.rentpal_backend.repository.OwnerRepository;
 import com.rentpal.rentpal_backend.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.List;
 
 @Service
@@ -33,6 +36,10 @@ public class OwnerService {
     }
 
     public Owner createOwner(Owner owner) {
+        if (owner.getEmail() != null && ownerRepository.existsByEmail(owner.getEmail())) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT, "Owner with this email already exists");
+        }
         return ownerRepository.save(owner);
     }
 

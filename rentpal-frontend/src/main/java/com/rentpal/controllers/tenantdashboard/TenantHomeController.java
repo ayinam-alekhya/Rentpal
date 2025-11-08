@@ -24,6 +24,10 @@ public class TenantHomeController {
     
     @FXML
     private Label pendingDues;
+
+    @FXML
+    private Label overdues;
+
     
     @FXML
     private Label complaintsRaised;
@@ -258,16 +262,17 @@ public class TenantHomeController {
     
     private void updateStatistics() {
         try {
-            // Calculate total rent paid
+            // Total rent paid (as you have)
             double totalPaid = paymentData.stream()
-                    .filter(p -> "Paid".equalsIgnoreCase(p.getStatus()) || "Completed".equalsIgnoreCase(p.getStatus()))
+                    .filter(p -> "Paid".equalsIgnoreCase(p.getStatus())
+                            || "Completed".equalsIgnoreCase(p.getStatus()))
                     .mapToDouble(PaymentDTO::getAmount)
                     .sum();
             if (totalRentPaid != null) {
                 totalRentPaid.setText(String.format("$%.2f", totalPaid));
             }
-            
-            // Calculate pending dues (assuming this is stored in tenant data)
+
+            // Pending dues from tenant session (as you have)
             TenantDTO currentTenant = SessionManager.getInstance().getCurrentTenant();
             if (currentTenant != null) {
                 double remainingRent = currentTenant.getRemainingRent();
@@ -277,23 +282,30 @@ public class TenantHomeController {
             } else if (pendingDues != null) {
                 pendingDues.setText("$0.00");
             }
-            
-            // Count complaints
+
+            // Complaints count (as you have)
             int complaintCount = complaintData.size();
             if (complaintsRaised != null) {
                 complaintsRaised.setText(String.valueOf(complaintCount));
             }
+
+            // 🆕 Overdues count = number of payments with status OVERDUE
+            long overdueCount = paymentData.stream()
+                    .filter(p -> "OVERDUE".equalsIgnoreCase(p.getStatus()))
+                    .count();
+            if (overdues != null) {
+                overdues.setText(String.valueOf(overdueCount));
+            }
+
         } catch (Exception e) {
-            System.err.println("Error updating statistics: " + e.getMessage());
-            e.printStackTrace();
-            // Set default values in case of error
+            // fallbacks
             try {
                 if (totalRentPaid != null) totalRentPaid.setText("$0.00");
                 if (pendingDues != null) pendingDues.setText("$0.00");
                 if (complaintsRaised != null) complaintsRaised.setText("0");
-            } catch (Exception ex) {
-                System.err.println("Error setting default statistics: " + ex.getMessage());
-            }
+                if (overdues != null) overdues.setText("0"); // 🆕
+            } catch (Exception ignored) {}
         }
     }
+
 }

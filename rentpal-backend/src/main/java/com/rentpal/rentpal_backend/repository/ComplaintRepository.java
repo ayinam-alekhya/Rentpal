@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
+    long countByOwner_OwnerId(Long ownerId);
     List<Complaint> findByOwner_OwnerId(Long ownerId);
     List<Complaint> findByOwner_OwnerIdAndStatusIgnoreCase(Long ownerId, String status);
     List<Complaint> findByTenant_TenantId(Long tenantId);

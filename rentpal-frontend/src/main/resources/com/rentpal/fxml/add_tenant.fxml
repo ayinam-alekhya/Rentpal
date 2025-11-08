@@ -35,6 +35,8 @@
                 <TextField fx:id="tenantContactField" promptText="Contact Number" styleClass="text-field"/>
                 <TextField fx:id="tenantUnitField" promptText="Unit/Flat Number" styleClass="text-field"/>
                 <TextField fx:id="tenantRentField" promptText="Monthly Rent" styleClass="text-field"/>
+                <PasswordField fx:id="passwordField" promptText="Password" />
+
 
                 <ComboBox fx:id="statusComboBox" promptText="Select Status" styleClass="combo-box">
                     <items>

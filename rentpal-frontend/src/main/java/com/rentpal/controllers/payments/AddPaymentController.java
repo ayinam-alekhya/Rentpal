@@ -50,15 +50,32 @@ public class AddPaymentController {
     }
 
     /** Populate owners’ tenant dropdown. */
+ // AddPaymentController.java
     private void loadTenantsIntoComboBox() {
         try {
-            List<TenantDTO> tenants = tenantService.getAllTenants();
+            // 1) Get current owner id from the session
+            if (SessionManager.getInstance().getCurrentOwner() == null) {
+                showAlert(Alert.AlertType.ERROR, "Session", "Owner session not found. Please log in again.");
+                tenantComboBox.setDisable(true);
+                return;
+            }
+            Long ownerId = SessionManager.getInstance().getCurrentOwner().getOwnerId();
+            System.out.println("[AddPayment] loading tenants for ownerId=" + ownerId);
+
+            // 2) Fetch ONLY this owner's tenants
+            List<TenantDTO> tenants = tenantService.getTenantsForOwner(ownerId);
+
+            // 3) Defensive: remove nulls / missing ids
+            tenants.removeIf(t -> t == null || t.getTenantId() == null);
+
+            // 4) Fill combo
             tenantComboBox.getItems().setAll(tenants);
 
-            tenantComboBox.setCellFactory(cb -> new ListCell<>() {
+            // 5) Pretty render + selection text
+            tenantComboBox.setCellFactory(list -> new ListCell<>() {
                 @Override protected void updateItem(TenantDTO t, boolean empty) {
                     super.updateItem(t, empty);
-                    setText(empty || t == null ? null : t.getName() + " (ID: " + t.getTenantId() + ")");
+                    setText(empty || t == null ? null : t.getName() + "  (ID: " + t.getTenantId() + ")");
                 }
             });
             tenantComboBox.setButtonCell(new ListCell<>() {
@@ -67,9 +84,27 @@ public class AddPaymentController {
                     setText(empty || t == null ? "Select Tenant" : t.getName());
                 }
             });
+
+            // 6) Optional: preselect first tenant to avoid null id
+            if (!tenants.isEmpty()) {
+                tenantComboBox.getSelectionModel().select(0);
+                selectedTenantId = tenantComboBox.getValue().getTenantId();
+                System.out.println("[AddPayment] preselected tenantId=" + selectedTenantId);
+            } else {
+                showAlert(Alert.AlertType.INFORMATION, "No Tenants",
+                        "You have no tenants mapped to this owner yet.");
+            }
+
+            // 7) Keep selectedTenantId in sync if user changes dropdown
+            tenantComboBox.valueProperty().addListener((obs, o, n) -> {
+                selectedTenantId = (n == null) ? null : n.getTenantId();
+                System.out.println("[AddPayment] changed selection tenantId=" + selectedTenantId);
+            });
+
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Failed to load tenants: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Load Tenants Failed", e.getMessage());
+            tenantComboBox.setDisable(true);
         }
     }
 
@@ -133,6 +168,7 @@ public class AddPaymentController {
             // Build table row view model (your existing Payment class)
             String tenantName = resolveTenantNameForRow();
             newPayment = new Payment(
+                created.getPaymentId(),
                 created.getPaymentDate(),   // display date (you format in table)
                 tenantName,                 // tenant name for the table
                 selectedTenantId,           // tenant id

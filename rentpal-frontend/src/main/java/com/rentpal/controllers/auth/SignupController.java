@@ -80,21 +80,17 @@ public class SignupController {
         }
 
         try {
-            if ("Owner".equals(selectedRole)) {
-                // Create a new owner DTO
-                OwnerDTO ownerDTO = new OwnerDTO();
-                ownerDTO.setName(name);
-                ownerDTO.setEmail(email);
-                ownerDTO.setPhone(""); // Phone is not collected in signup form
-                ownerDTO.setAddress(""); // Address is not collected in signup form
+        if ("Owner".equals(selectedRole)) {
+            OwnerDTO ownerDTO = new OwnerDTO();
+            ownerDTO.setName(name);
+            ownerDTO.setEmail(email);
+            ownerDTO.setPhone("");
+            ownerDTO.setAddress("");
 
-                // Call backend API to create owner
-                OwnerDTO createdOwner = ownerService.createOwner(ownerDTO);
-
-                System.out.println("New owner registered: " + createdOwner.getName() + " (" + createdOwner.getEmail() + ")");
-
-                showAlert(Alert.AlertType.INFORMATION, "Signup Successful", "Owner account created successfully. You can now log in.");
-           } else if ("Tenant".equals(selectedRole)) {
+            OwnerDTO createdOwner = ownerService.createOwner(ownerDTO);
+            showAlert(Alert.AlertType.INFORMATION, "Signup Successful",
+                    "Owner account created successfully. You can now log in.");
+        } else if ("Tenant".equals(selectedRole)) {
             var selectedOwner = ownerComboBox.getSelectionModel().getSelectedItem();
             if (selectedOwner == null) {
                 showAlert(Alert.AlertType.WARNING, "Missing Owner", "Please select an Owner for this Tenant.");
@@ -110,22 +106,32 @@ public class SignupController {
             tenantDTO.setStatus("Active");
             tenantDTO.setRemainingRent(0.0);
             tenantDTO.setPaymentStatus("Unpaid");
-
-            // attach owner at signup
             tenantDTO.setOwnerId(selectedOwner.getOwnerId());
 
             TenantDTO createdTenant = tenantService.createTenant(tenantDTO);
-            System.out.println("New tenant registered: " + createdTenant.getName() + " (" + createdTenant.getEmail() + ")");
-            showAlert(Alert.AlertType.INFORMATION, "Signup Successful", "Tenant account created successfully. You can now log in.");
+            showAlert(Alert.AlertType.INFORMATION, "Signup Successful",
+                    "Tenant account created successfully. You can now log in.");
         }
 
-            // ✅ After successful signup, go back to login screen using the same Stage
-            SceneSwitcher.switchScene(event, "/com/rentpal/fxml/login.fxml");
+        SceneSwitcher.switchScene(event, "/com/rentpal/fxml/login.fxml");
+
 
         } catch (Exception e) {
+            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+
+            // ✅ Detect duplicate email messages from backend
+            if (msg.contains("already exists") || msg.contains("duplicate") || msg.contains("email taken")) {
+                showAlert(Alert.AlertType.WARNING, "User Already Exists",
+                        "An account with this email already exists. Please log in instead.");
+            } else {
+                // Generic unknown error
+                showAlert(Alert.AlertType.ERROR, "Signup Failed",
+                        "An unexpected error occurred. Please try again later.");
+            }
+
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "An error occurred while signing up. Please try again.");
         }
+
     }
 
     // ✅ Handles "Back to Login" button click

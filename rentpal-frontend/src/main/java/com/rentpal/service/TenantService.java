@@ -45,6 +45,13 @@ public class TenantService {
         String json = ApiUtil.get("/tenants/owner/" + ownerId);
         return MAPPER.readValue(json, new TypeReference<List<TenantSummaryDTO>>() {});
     }
+
+    public List<TenantDTO> getTenantsForOwner(Long ownerId) throws Exception {
+        String json = ApiUtil.get("/tenants/owner/" + ownerId);
+        ObjectMapper m = new ObjectMapper();
+        return m.readValue(json, new com.fasterxml.jackson.core.type.TypeReference<List<TenantDTO>>(){});
+    }
+    
     public TenantDTO createTenant(CreateTenantRequest req) throws Exception {
         String jsonInput = MAPPER.writeValueAsString(req);
         String jsonOutput = ApiUtil.post("/tenants", jsonInput);

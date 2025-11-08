@@ -4,6 +4,7 @@ import javafx.beans.property.*;
 
 public class Payment {
 
+    private final LongProperty   paymentId; 
     private final StringProperty date;
     private final StringProperty tenant;
     private final LongProperty tenantId;
@@ -11,7 +12,8 @@ public class Payment {
     private final StringProperty status;
     private final StringProperty method;
 
-    public Payment(String date, String tenant, Long tenantId, double amount, String status, String method) {
+    public Payment(Long paymentId, String date, String tenant, Long tenantId, double amount, String status, String method) {
+        this.paymentId = new SimpleLongProperty(paymentId == null ? 0L : paymentId);
         this.date = new SimpleStringProperty(date);
         this.tenant = new SimpleStringProperty(tenant);
         this.tenantId = new SimpleLongProperty(tenantId);
@@ -20,6 +22,7 @@ public class Payment {
         this.method = new SimpleStringProperty(method);
     }
 
+    public LongProperty paymentIdProperty() { return paymentId; }
     public StringProperty dateProperty() { return date; }
     public StringProperty tenantProperty() { return tenant; }
     public LongProperty tenantIdProperty() { return tenantId; }
@@ -27,6 +30,8 @@ public class Payment {
     public StringProperty statusProperty() { return status; }
     public StringProperty methodProperty() { return method; }
 
+
+    public Long   getPaymentId() { return paymentId.get(); }
     public String getDate() { return date.get(); }
     public String getTenant() { return tenant.get(); }
     public Long getTenantId() { return tenantId.get(); }
@@ -34,6 +39,8 @@ public class Payment {
     public String getStatus() { return status.get(); }
     public String getMethod() { return method.get(); }
 
+
+    public void setPaymentId(Long v) { this.paymentId.set(v == null ? 0L : v); }
     public void setDate(String date) { this.date.set(date); }
     public void setTenant(String tenant) { this.tenant.set(tenant); }
     public void setTenantId(Long tenantId) { this.tenantId.set(tenantId); }

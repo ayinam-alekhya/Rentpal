@@ -21,85 +21,86 @@ public class AuthController {
     private AuthService authService;
 
    @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody UserRegistrationDTO registrationDTO) {
-        try {
-            String role = registrationDTO.getRole();
-            if ("owner".equalsIgnoreCase(role)) {
-                Owner owner = authService.registerOwner(registrationDTO);
-                return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Owner registered successfully",
-                    "userType", "owner",
-                    "user", Map.of("id", owner.getOwnerId(), "name", owner.getName(), "email", owner.getEmail())
-                ));
-            } else if ("tenant".equalsIgnoreCase(role)) {
-                if (registrationDTO.getOwnerId() == null) {
-                    return ResponseEntity.badRequest().body(Map.of(
-                        "success", false,
-                        "message", "ownerId is required for tenant registration"
-                    ));
-                }
-                Tenant tenant = authService.registerTenant(registrationDTO);
-                return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Tenant registered successfully",
-                    "userType", "tenant",
-                    "user", Map.of("id", tenant.getTenantId(), "name", tenant.getName(), "email", tenant.getEmail())
-                ));
-            } else {
+public ResponseEntity<Map<String, Object>> register(@RequestBody UserRegistrationDTO registrationDTO) {
+    try {
+        String role = registrationDTO.getRole();
+        if ("owner".equalsIgnoreCase(role)) {
+            Owner owner = authService.registerOwner(registrationDTO);
+            var ownerDTO = AuthService.toOwnerDTO(owner);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Owner registered successfully",
+                "userType", "owner",
+                "user", ownerDTO
+            ));
+        } else if ("tenant".equalsIgnoreCase(role)) {
+            if (registrationDTO.getOwnerId() == null) {
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "Invalid role. Must be 'owner' or 'tenant'"
+                    "message", "ownerId is required for tenant registration"
                 ));
             }
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of(
+            Tenant tenant = authService.registerTenant(registrationDTO);
+            var tenantDTO = AuthService.toTenantDTO(tenant); // 👈 includes ownerId
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Tenant registered successfully",
+                "userType", "tenant",
+                "user", tenantDTO
+            ));
+        } else {
+            return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
-                "message", "Registration failed: " + e.getMessage()
+                "message", "Invalid role. Must be 'owner' or 'tenant'"
             ));
         }
+    } catch (Exception e) {
+        return ResponseEntity.status(500).body(Map.of(
+            "success", false,
+            "message", "Registration failed: " + e.getMessage()
+        ));
     }
+}
 
+@PostMapping("/login")
+public ResponseEntity<Map<String, Object>> login(@RequestBody UserLoginDTO loginDTO) {
+    String email = loginDTO.getEmail();
+    String password = loginDTO.getPassword();
+    String role = loginDTO.getRole();
+    System.out.println("[/auth/login] email=" + email + ", role=" + role);
 
-    @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody UserLoginDTO loginDTO) {
-        String email = loginDTO.getEmail();
-        String password = loginDTO.getPassword();
-        String role = loginDTO.getRole();
-        System.out.println("[/auth/login] email=" + loginDTO.getEmail() + ", role=" + loginDTO.getRole());
-        
-        try {
-            if ("owner".equalsIgnoreCase(role)) {
-                Owner owner = authService.authenticateOwner(email, password);
-                if (owner != null) {
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("success", true);
-                    response.put("userType", "owner");
-                    response.put("user", owner);
-                    return ResponseEntity.ok(response);
-                }
-            } else if ("tenant".equalsIgnoreCase(role)) {
-                Tenant tenant = authService.authenticateTenant(email, password);
-                if (tenant != null) {
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("success", true);
-                    response.put("userType", "tenant");
-                    response.put("user", tenant);
-                    return ResponseEntity.ok(response);
-                }
+    try {
+        if ("owner".equalsIgnoreCase(role)) {
+            Owner owner = authService.authenticateOwner(email, password);
+            if (owner != null) {
+                var ownerDTO = AuthService.toOwnerDTO(owner);
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "userType", "owner",
+                    "user", ownerDTO
+                ));
             }
-            
-            // If authentication failed
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Invalid email, password, or role");
-            return ResponseEntity.status(401).body(response);
-            
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Authentication failed: " + e.getMessage());
-            return ResponseEntity.status(500).body(response);
+        } else if ("tenant".equalsIgnoreCase(role)) {
+            Tenant tenant = authService.authenticateTenant(email, password);
+            if (tenant != null) {
+                var tenantDTO = AuthService.toTenantDTO(tenant); // 👈 has ownerId
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "userType", "tenant",
+                    "user", tenantDTO
+                ));
+            }
         }
+
+        return ResponseEntity.status(401).body(Map.of(
+            "success", false,
+            "message", "Invalid email, password, or role"
+        ));
+    } catch (Exception e) {
+        return ResponseEntity.status(500).body(Map.of(
+            "success", false,
+            "message", "Authentication failed: " + e.getMessage()
+        ));
     }
+}
 }

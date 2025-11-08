@@ -32,6 +32,9 @@ public class Tenant {
     @Column(nullable = false)
     private String status; // e.g. "Active", "Inactive"
 
+    @Column(nullable = false)
+    private String password;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = true)
     @JsonBackReference("owner-tenants")
@@ -112,6 +115,9 @@ public class Tenant {
 
     public String getPaymentStatus() { return paymentStatus; }
     public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
     // ---------------- Helper Methods ----------------
     public void addPayment(Payment payment) {

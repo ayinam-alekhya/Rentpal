@@ -1,6 +1,7 @@
 package com.rentpal.rentpal_backend.service;
 
 import com.rentpal.rentpal_backend.dto.CreateTenantRequest;
+import com.rentpal.rentpal_backend.dto.TenantDTO;
 import com.rentpal.rentpal_backend.dto.TenantSummaryDTO;
 import com.rentpal.rentpal_backend.dto.UpdateTenantRequest;
 import com.rentpal.rentpal_backend.exception.ResourceNotFoundException;
@@ -10,9 +11,11 @@ import com.rentpal.rentpal_backend.repository.OwnerRepository;
 import com.rentpal.rentpal_backend.repository.TenantRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import org.springframework.util.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class TenantService {
@@ -26,18 +29,15 @@ public class TenantService {
     // ✅ CREATE
     @Transactional
     public Tenant createTenant(Tenant tenant) {
-        // Validate and set owner if provided
+        if (tenant.getEmail() != null && tenantRepository.existsByEmail(tenant.getEmail())) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT, "Tenant with this email already exists");
+        }
+
         if (tenant.getOwner() != null && tenant.getOwner().getOwnerId() != null) {
-            try {
-                Owner owner = ownerRepository.findById(tenant.getOwner().getOwnerId())
-                        .orElse(null);
-                tenant.setOwner(owner);
-            } catch (Exception e) {
-                // If owner not found, set owner to null
-                tenant.setOwner(null);
-            }
+            Owner owner = ownerRepository.findById(tenant.getOwner().getOwnerId()).orElse(null);
+            tenant.setOwner(owner);
         } else {
-            // Set owner to null explicitly if no owner is provided
             tenant.setOwner(null);
         }
         return tenantRepository.save(tenant);
@@ -48,6 +48,13 @@ public class TenantService {
         if (req.getOwnerId() == null) {
             throw new RuntimeException("ownerId is required to create a tenant");
         }
+
+    if (StringUtils.hasText(req.getEmail()) && tenantRepository.existsByEmail(req.getEmail())) {
+        throw new RuntimeException("A tenant with this email already exists.");
+    }
+    if (StringUtils.hasText(req.getPhone()) && tenantRepository.existsByPhone(req.getPhone())) {
+        throw new RuntimeException("A tenant with this phone number already exists.");
+    }
 
         Owner owner = ownerRepository.findById(req.getOwnerId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -61,6 +68,7 @@ public class TenantService {
         tenant.setRentAmount(req.getRentAmount());
         tenant.setStatus("Active");
         tenant.setOwner(owner); // <-- attach during signup
+        tenant.setPassword(req.getPassword());
 
         // defaults already handled in Tenant() ctor (remainingRent/paymentStatus)
         return tenantRepository.save(tenant);
@@ -72,8 +80,8 @@ public class TenantService {
                 .map(t -> new TenantSummaryDTO(
                         t.getTenantId(),
                         t.getName(),
-                        t.getRoomNumber(),
                         t.getPhone(),
+                        t.getRoomNumber(),
                         t.getRemainingRent(),
                         t.getPaymentStatus()
                 ))
@@ -140,6 +148,19 @@ public class TenantService {
     public Tenant getTenantById(Long id) {
         return tenantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with ID: " + id));
+    }
+
+    private TenantDTO toDTO(com.rentpal.rentpal_backend.model.Tenant t) {
+        TenantDTO dto = new TenantDTO();
+        dto.setTenantId(t.getTenantId());
+        dto.setName(t.getName());
+        dto.setEmail(t.getEmail());
+        dto.setPhone(t.getPhone());
+        dto.setRoomNumber(t.getRoomNumber());
+        dto.setRentAmount(t.getRentAmount());
+        dto.setStatus(t.getStatus());
+        dto.setOwnerId(t.getOwner() != null ? t.getOwner().getOwnerId() : null); // 👈
+        return dto;
     }
 
     public List<TenantSummaryDTO> getTenantSummariesByOwner(Long ownerId) {

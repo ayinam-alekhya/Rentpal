@@ -46,7 +46,7 @@ public class TenantsController {
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         unitColumn.setCellValueFactory(new PropertyValueFactory<>("roomNumber"));
         // No contact in summary DTO → show blank (or remainingRent if you want)
-        contactColumn.setCellValueFactory(new PropertyValueFactory<>("contact")); 
+        contactColumn.setCellValueFactory(new PropertyValueFactory<>("phone")); 
         // Show paymentStatus in the "Status" column
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("paymentStatus"));
 
@@ -58,6 +58,12 @@ public class TenantsController {
     public void loadTenantsForOwner() {
         try {
             if (ownerId == null) {
+                var session = com.rentpal.utils.SessionManager.getInstance();
+                if (session.isOwner() && session.getCurrentOwner() != null) {
+                    ownerId = session.getCurrentOwner().getOwnerId();
+                }
+            }
+            if (ownerId == null) {
                 System.err.println("[TenantsController] ownerId is null; not loading.");
                 return;
             }
@@ -68,6 +74,7 @@ public class TenantsController {
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to load tenants: " + e.getMessage());
         }
     }
+
 
     private void handleRowDoubleClick(MouseEvent event) {
         if (event.getClickCount() == 2 && tenantsTable.getSelectionModel().getSelectedItem() != null) {
@@ -98,21 +105,17 @@ public class TenantsController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/rentpal/fxml/add_tenant.fxml"));
             Parent root = loader.load();
 
-            AddTenantController controller = loader.getController();
-            // make sure your AddTenantController has setOwnerId(...) and uses it when posting
-            controller.setOwnerId(ownerId);
-
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
             stage.setTitle("Add Tenant");
             stage.showAndWait();
 
-            // Refresh owner-scoped list after dialog closes
             loadTenantsForOwner();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
 
     private void playFadeIn(Parent node) {
         FadeTransition fade = new FadeTransition(Duration.millis(300), node);

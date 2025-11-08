@@ -120,4 +120,27 @@ public class AuthService {
         System.out.println("Tenant authenticated: " + tenant.getName() + " (" + tenant.getEmail() + ")");
         return tenant;
     }
+
+    // rentpal_backend/service/AuthService.java  (add these helpers)
+    public static com.rentpal.rentpal_backend.dto.OwnerDTO toOwnerDTO(Owner o) {
+        com.rentpal.rentpal_backend.dto.OwnerDTO dto = new com.rentpal.rentpal_backend.dto.OwnerDTO();
+        dto.setOwnerId(o.getOwnerId());
+        dto.setName(o.getName());
+        dto.setEmail(o.getEmail());
+        return dto;
+    }
+
+    public static com.rentpal.rentpal_backend.dto.TenantDTO toTenantDTO(Tenant t) {
+        com.rentpal.rentpal_backend.dto.TenantDTO dto = new com.rentpal.rentpal_backend.dto.TenantDTO();
+        dto.setTenantId(t.getTenantId());
+        dto.setName(t.getName());
+        dto.setEmail(t.getEmail());
+        dto.setPhone(t.getPhone());
+        dto.setRoomNumber(t.getRoomNumber());
+        dto.setRentAmount(t.getRentAmount());
+        dto.setStatus(t.getStatus());
+        dto.setOwnerId(t.getOwner() != null ? t.getOwner().getOwnerId() : null); // 👈 critical
+        return dto;
+    }
+
 }

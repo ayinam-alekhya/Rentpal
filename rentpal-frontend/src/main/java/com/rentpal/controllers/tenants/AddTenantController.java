@@ -19,72 +19,79 @@ public class AddTenantController {
     @FXML private TextField tenantNameField;
     @FXML private TextField tenantEmailField;
     @FXML private TextField tenantContactField;
-    @FXML private TextField tenantUnitField;
+    @FXML private TextField tenantUnitField;   // room number
     @FXML private TextField tenantRentField;
     @FXML private ComboBox<String> statusComboBox;
+    @FXML private PasswordField passwordField;
 
-    private TenantsController tenantsController; // Reference to parent controller
+    private TenantsController tenantsController;
     private TenantService tenantService = new TenantService();
-    private Long ownerId;
 
-    public void setOwnerId(Long ownerId) {
-    this.ownerId = ownerId;
-}
-
-    // 👇 This setter will be called from TenantsController
     public void setTenantsController(TenantsController controller) {
         this.tenantsController = controller;
     }
 
-   @FXML
+    @FXML
     private void handleAddTenant() {
-        String name = tenantNameField.getText();
-        String email = tenantEmailField.getText();
-        String contact = tenantContactField.getText();
-        String unit = tenantUnitField.getText();
-        String rentText = tenantRentField.getText();
+        String name = tenantNameField.getText().trim();
+        String email = tenantEmailField.getText().trim();
+        String contact = tenantContactField.getText().trim();
+        String unit = tenantUnitField.getText().trim();       // e.g., "A1-101"
+        String rentText = tenantRentField.getText().trim();
         String status = statusComboBox.getValue();
+        String password = passwordField.getText().trim();
 
-        if (name.isEmpty() || email.isEmpty() || contact.isEmpty() || unit.isEmpty() || rentText.isEmpty() || status == null) {
+        if (name.isEmpty() || email.isEmpty() || contact.isEmpty() ||
+            unit.isEmpty() || rentText.isEmpty() || status == null) {
             new Alert(Alert.AlertType.WARNING, "Please fill all fields!").showAndWait();
             return;
         }
-
-        if (ownerId == null) {
-            new Alert(Alert.AlertType.ERROR, "Owner context missing (ownerId is null).").showAndWait();
+        if (password.isBlank()) {
+            new Alert(Alert.AlertType.WARNING, "Password cannot be empty!").showAndWait();
             return;
         }
 
-        double rent;
+        Double rentAmount;
         try {
-            rent = Double.parseDouble(rentText);
+            rentAmount = Double.parseDouble(rentText);
         } catch (NumberFormatException e) {
             new Alert(Alert.AlertType.ERROR, "Rent must be a valid number!").showAndWait();
             return;
         }
 
+        // ✅ Ensure owner is logged in
+        var session = SessionManager.getInstance();
+        if (!session.isOwner() || session.getCurrentOwner() == null) {
+            new Alert(Alert.AlertType.ERROR, "Owner context missing. Please log in as an owner.").showAndWait();
+            return;
+        }
+
+        Long ownerId = session.getCurrentOwner().getOwnerId();
+        if (ownerId == null) {
+            new Alert(Alert.AlertType.ERROR, "Owner ID is missing in session.").showAndWait();
+            return;
+        }
+
         try {
-            // Build request that backend expects
+            // Build the request DTO
             com.rentpal.dto.CreateTenantRequest req = new com.rentpal.dto.CreateTenantRequest();
             req.setName(name);
             req.setEmail(email);
             req.setPhone(contact);
-            req.setRoomNumber(unit);
-            req.setRentAmount(rent);
-            req.setOwnerId(ownerId); // <-- critical
+            req.setRoomNumber(unit);      // String like “A1-101”
+            req.setRentAmount(rentAmount);
+            req.setPassword(password);
+            req.setOwnerId(ownerId);      // ✅ this goes to CreateTenantRequest
 
-            // POST
+            // POST to backend
             TenantDTO created = tenantService.createTenant(req);
 
-            // optional: you can ignore 'status' here if backend sets paymentStatus/remainingRent defaults
             new Alert(Alert.AlertType.INFORMATION, "Tenant added successfully!").showAndWait();
 
-            // Ask parent to refresh its owner-scoped table
             if (tenantsController != null) {
                 tenantsController.loadTenantsForOwner();
             }
 
-            // Close dialog
             Stage stage = (Stage) tenantNameField.getScene().getWindow();
             stage.close();
 
@@ -93,7 +100,6 @@ public class AddTenantController {
             new Alert(Alert.AlertType.ERROR, "Failed to add tenant: " + e.getMessage()).showAndWait();
         }
     }
-
 
     @FXML
     private void handleCancel() {
