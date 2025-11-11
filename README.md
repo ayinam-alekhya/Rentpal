@@ -1,6 +1,6 @@
 # 🏠 RentPal — Property Rental Management System
 
-RentPal is a full‑stack Java application that simplifies property rental management for owners and tenants.  
+RentPal is a full‑stack Java application that simplifies property rental🏠 management for owners and tenants.  
 It includes a **Spring Boot backend (REST APIs)** and a **JavaFX frontend** for a rich, interactive desktop experience.
 
 ---
